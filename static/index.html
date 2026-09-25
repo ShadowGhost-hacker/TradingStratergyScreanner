@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Scan Indian Stock Market (NSE & BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
+    <title>📈 Trading Strategy Screener & Backtester | NSE & BSE</title>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- TradingView Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+
+    <!-- Official TradingView Advanced Real-Time Charting Library / Technical Analysis Widget -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+    <div class="app-container">
+
+        <!-- ================================================================ -->
+        <!-- Top Navigation Bar -->
+        <!-- ================================================================ -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <span class="brand-icon">📈</span>
+                <span class="brand-title">StrategyScreener <span class="brand-subtitle">& Backtester</span></span>
+            </div>
+
+            <!-- View Switcher (Screener vs Backtest Simulator) -->
+            <div class="nav-view-switcher">
+                <button class="nav-tab active" id="tabScreener" onclick="switchMainView('screener')">
+                    🔍 Market Screener
+                </button>
+                <button class="nav-tab" id="tabBacktest" onclick="switchMainView('backtest')">
+                    🧪 Backtest Simulator
+                </button>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="navbar-actions">
+                <!-- Cloud Sync Status -->
+                <button class="btn btn-ghost btn-sm" id="cloudSyncBtn" onclick="openCloudModal()" title="Free Cloud Storage & Backup">
+                    ☁️ <span id="cloudStatusLabel">Cloud Storage</span>
+                </button>
+
+                <!-- Theme Toggle -->
+                <div style="display:flex; align-items:center; gap:6px; margin: 0 4px;">
+                    <span class="theme-toggle-label">☀️</span>
+                    <div class="theme-toggle" id="themeToggle" title="Toggle Light/Dark Theme"></div>
+                    <span class="theme-toggle-label">🌙</span>
+                </div>
+
+                <!-- User Auth Profile -->
+                <div class="user-auth-wrapper">
+                    <button class="btn btn-sm btn-primary" id="userAuthBtn" onclick="openAuthModal()">
+                        👤 Sign In
+                    </button>
+                    <!-- User Dropdown (when logged in) -->
+                    <div class="user-dropdown hidden" id="userDropdown">
+                        <div class="user-dropdown-header">
+                            <span class="user-dropdown-name" id="dropdownUsername">User</span>
+                            <span class="user-dropdown-email" id="dropdownEmail">user@example.com</span>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <button class="user-dropdown-item" onclick="openCloudModal()">☁️ Cloud Data & Sync</button>
+                        <button class="user-dropdown-item" onclick="switchMainView('backtest'); showSavedBacktests();">📊 My Saved Backtests</button>
+                        <div class="user-dropdown-divider"></div>
+                        <button class="user-dropdown-item text-danger" onclick="logout()">🚪 Sign Out</button>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <button class="btn btn-ghost btn-icon" id="settingsBtn" title="Settings & SMTP Configuration">⚙️</button>
+            </div>
+        </nav>
+
+        <!-- ================================================================ -->
+        <!-- Main Application Workspace -->
+        <!-- ================================================================ -->
+        <div class="main-content">
+
+            <!-- ============================================================ -->
+            <!-- Left Sidebar: Strategies & Universes -->
+            <!-- ============================================================ -->
+            <aside class="panel-left">
+
+                <!-- Strategies Section -->
+                <div class="panel-section">
+                    <div class="panel-section-header">
+                        <span class="panel-section-title">📋 Trading Strategies</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn btn-sm btn-secondary" id="uploadStrategyBtn" title="Upload strategy .py file">📁 Upload</button>
+                            <button class="btn btn-sm btn-primary" id="newStrategyBtn">+ New</button>
+                        </div>
+                        <input type="file" id="strategyFileInput" accept=".py" style="display:none;">
+                    </div>
+                    <div class="strategy-list" id="strategyList">
+                        <div style="text-align:center; padding:20px; color:var(--text-tertiary); font-size:0.82rem;">
+                            <div class="spinner" style="margin:0 auto 10px;"></div>
+                            Loading strategies...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screener Configuration Section (Visible on Screener View) -->
+                <div class="panel-section" id="screenerConfigSection">
+                    <div class="panel-section-header">
+                        <span class="panel-section-title">🔍 Scan Universe (Multi-Select)</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn btn-xs btn-ghost" onclick="selectAllUniverses(true)">Select All</button>
+                            <button class="btn btn-xs btn-ghost" onclick="selectAllUniverses(false)">Clear</button>
+                        </div>
+                    </div>
+
+                    <!-- Multi-select Stock Universes -->
+                    <div class="universe-multi-wrapper" id="universeMultiWrapper">
+                        <!-- Populated dynamically: Nifty 50, All NSE Stocks, All BSE Stocks, F&O, etc. -->
+                        <div class="spinner" style="margin:10px auto;"></div>
+                    </div>
+
+                    <!-- Custom Tickers (shown when custom is selected) -->
+                    <div class="form-group hidden" id="customTickersWrapper" style="margin-top:10px;">
+                        <label class="form-label">Custom Stock Tickers</label>
+                        <input type="text" class="form-input" id="customTickers"
+                               placeholder="RELIANCE, TATASTEEL.NS, TCS.BO, INFY">
+                        <span class="text-xs text-muted">Use .NS for NSE or .BO for BSE</span>
+                    </div>
+
+                    <!-- Timeframe -->
+                    <div class="form-group" style="margin-top:12px;">
+                        <label class="form-label">Candle Timeframe</label>
+                        <select class="form-select" id="timeframeSelect">
+                            <option value="1d">Daily (1d)</option>
+                        </select>
+                    </div>
+
+                    <!-- Candle Tolerance -->
+                    <div class="form-group">
+                        <label class="form-label">Signal Lookback Tolerance</label>
+                        <div class="range-wrapper">
+                            <input type="range" class="range-slider" id="toleranceSlider"
+                                   min="0" max="10" value="0" step="1">
+                            <span class="range-value" id="toleranceValue">0</span>
+                        </div>
+                        <div class="text-xs text-muted mt-2">
+                            0 = all selected strategies must trigger on the current bar.<br>
+                            1-10 = allows signals within lookback window.
+                        </div>
+                    </div>
+
+                    <!-- Start Scan Button -->
+                    <div style="margin-top:16px;">
+                        <button class="btn btn-scan" id="scanBtn">
+                            🚀 Start Market Scan
+                        </button>
+                    </div>
+
+                    <!-- Scan Progress -->
+                    <div class="scan-progress-wrapper" id="scanProgressWrapper">
+                        <div class="scan-progress-header">
+                            <span class="scan-progress-label">Scanning market...</span>
+                            <button class="btn btn-sm btn-danger" id="cancelScanBtn">Cancel</button>
+                        </div>
+                        <div class="scan-progress-bar">
+                            <div class="scan-progress-fill" id="scanProgressFill" style="width:0%"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                            <span class="scan-progress-ticker" id="scanProgressTicker"></span>
+                            <span class="scan-progress-stats" id="scanProgressStats">0/0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backtest Controls Sidebar Section (Visible on Backtest View) -->
+                <div class="panel-section hidden" id="backtestSidebarSection">
+                    <div class="panel-section-header">
+                        <span class="panel-section-title">🧪 Backtest Settings</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Initial Capital (₹)</label>
+                        <input type="number" class="form-input" id="btInitialCapital" value="100000" step="10000">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Position Size (% of Capital)</label>
+                        <input type="number" class="form-input" id="btPositionSize" value="10" min="1" max="100">
+                    </div>
+
+                    <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div class="form-group">
+                            <label class="form-label">Stop Loss %</label>
+                            <input type="number" class="form-input" id="btStopLoss" value="2.5" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Take Profit %</label>
+                            <input type="number" class="form-input" id="btTakeProfit" value="5.0" step="0.5">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Max Holding Bars</label>
+                        <input type="number" class="form-input" id="btMaxBars" value="25" min="1" max="200">
+                    </div>
+
+                    <div class="checkbox-row" style="margin: 10px 0;">
+                        <input type="checkbox" id="btExitOpposite" checked>
+                        <label for="btExitOpposite" style="font-size:0.84rem; cursor:pointer;">Exit on Opposite Signal</label>
+                    </div>
+
+                    <button class="btn btn-scan" id="runBacktestBtn" onclick="runBacktestSimulation()">
+                        ⚡ Run Backtest Simulation
+                    </button>
+
+                    <!-- Backtest Progress -->
+                    <div class="scan-progress-wrapper" id="btProgressWrapper">
+                        <div class="scan-progress-header">
+                            <span class="scan-progress-label">Backtesting...</span>
+                            <button class="btn btn-sm btn-danger" onclick="cancelBacktestSimulation()">Cancel</button>
+                        </div>
+                        <div class="scan-progress-bar">
+                            <div class="scan-progress-fill" id="btProgressFill" style="width:0%"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                            <span class="scan-progress-ticker" id="btProgressTicker"></span>
+                            <span class="scan-progress-stats" id="btProgressStats">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- ============================================================ -->
+            <!-- Center Main Workspace Panel -->
+            <!-- ============================================================ -->
+            <main class="panel-center">
+
+                <!-- 1. Market Screener Results View -->
+                <div id="resultsView">
+                    <!-- Toolbar -->
+                    <div class="results-toolbar">
+                        <span class="results-count" id="resultsCount">
+                            Select strategies and universes to scan
+                        </span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="results-filters">
+                                <button class="filter-chip active" data-filter="all">All</button>
+                                <button class="filter-chip buy" data-filter="buy">🟢 BUY</button>
+                                <button class="filter-chip sell" data-filter="sell">🔴 SELL</button>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" id="exportBtn" title="Export to CSV">📥 Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div class="results-table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Exchange</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Signal</th>
+                                    <th>Aligned Strategies</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">📊</div>
+                                            <div class="empty-state-title">Ready to Scan the Indian Stock Market</div>
+                                            <div class="empty-state-desc">
+                                                Select one or more strategies, choose stock universes (like Nifty 50, All NSE Stocks, All BSE Stocks), and click
+                                                <strong>Start Market Scan</strong> to find matching opportunities.
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. Backtest Simulator Dashboard View -->
+                <div id="backtestView" class="hidden">
+                    <div class="backtest-dashboard-header">
+                        <div>
+                            <h2 style="font-size:1.3rem; margin:0; color:var(--text-primary);">🧪 Backtest Simulator</h2>
+                            <p style="font-size:0.85rem; color:var(--text-tertiary); margin:4px 0 0;">
+                                Historical multi-strategy simulation with portfolio compounding, win rate, and drawdown analysis.
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-secondary" id="btExportTradesBtn" onclick="exportBacktestTradesCSV()" disabled>
+                                📥 Export Trades CSV
+                            </button>
+                            <button class="btn btn-sm btn-primary" id="btSaveCloudBtn" onclick="saveBacktestToCloud()" disabled>
+                                💾 Save to Cloud
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Metric Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-title">Total Return</div>
+                            <div class="kpi-value" id="kpiReturn">0.00%</div>
+                            <div class="kpi-sub" id="kpiNetPnl">Net P&L: ₹0</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Win Rate</div>
+                            <div class="kpi-value" id="kpiWinRate">0.00%</div>
+                            <div class="kpi-sub" id="kpiWinLoss">0 Wins / 0 Losses</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Total Trades</div>
+                            <div class="kpi-value" id="kpiTotalTrades">0</div>
+                            <div class="kpi-sub" id="kpiFinalCapital">Final Equity: ₹1,00,000</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Profit Factor</div>
+                            <div class="kpi-value" id="kpiProfitFactor">0.00</div>
+                            <div class="kpi-sub">Gross Win / Gross Loss</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Max Drawdown</div>
+                            <div class="kpi-value text-danger" id="kpiDrawdown">0.00%</div>
+                            <div class="kpi-sub" id="kpiDrawdownVal">Peak to trough</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Avg Trade Return</div>
+                            <div class="kpi-value" id="kpiAvgReturn">0.00%</div>
+                            <div class="kpi-sub" id="kpiAvgWinLoss">Win: 0% | Loss: 0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Equity Curve Section -->
+                    <div class="equity-curve-card">
+                        <div class="equity-curve-header">
+                            <span class="equity-curve-title">📈 Portfolio Equity Curve (Compounding)</span>
+                            <span class="text-xs text-muted" id="equityCurveSubtitle">Run a simulation to generate graph</span>
+                        </div>
+                        <div class="equity-curve-container" id="equityCurveContainer">
+                            <div class="empty-state" style="padding:40px 0;">
+                                <div class="empty-state-icon">📉</div>
+                                <div class="empty-state-title">No Backtest Executed Yet</div>
+                                <div class="empty-state-desc">Configure your simulation parameters on the left panel and click "Run Backtest Simulation".</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trade Log Table -->
+                    <div class="trade-log-card">
+                        <div class="trade-log-header">
+                            <span class="trade-log-title">📋 Trade Log & Executions</span>
+                            <input type="text" class="form-input form-input-sm" id="tradeLogSearch"
+                                   placeholder="Filter by symbol..." style="width:200px;" oninput="filterTradeLog()">
+                        </div>
+                        <div class="results-table-wrapper" style="max-height:350px;">
+                            <table class="results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Type</th>
+                                        <th>Entry Date</th>
+                                        <th>Entry (₹)</th>
+                                        <th>Exit Date</th>
+                                        <th>Exit (₹)</th>
+                                        <th>Return %</th>
+                                        <th>P&L (₹)</th>
+                                        <th>Exit Reason</th>
+                                        <th>Holding</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradeLogTableBody">
+                                    <tr>
+                                        <td colspan="10" style="text-align:center; color:var(--text-tertiary); padding:20px;">
+                                            No trades recorded.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Chart View: TradingView Active Suite & Signal Radar -->
+                <div id="chartView" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                    <div class="chart-header">
+                        <div class="chart-symbol-info">
+                            <button class="btn btn-ghost btn-sm" id="backToResults">← Back</button>
+                            <span class="chart-symbol" id="chartSymbolLabel">RELIANCE</span>
+                            <span class="chart-exchange-badge" id="chartExchangeBadge">NSE</span>
+                            <span class="badge badge-saved-note" id="chartSavedNotesBadge" style="display:none;"></span>
+                        </div>
+
+                        <!-- Segmented Switch between Full Active TV and Strategy Signal Radar -->
+                        <div class="chart-mode-selector">
+                            <button class="chart-mode-btn active" data-mode="active" onclick="setChartMode('active')" title="Full TradingView chart with drawings toolbar, trendlines, 100+ indicators">
+                                📊 TradingView Active Suite
+                            </button>
+                            <button class="chart-mode-btn" data-mode="signals" onclick="setChartMode('signals')" title="Candlestick chart with Strategy BUY/SELL signal markers">
+                                🎯 Strategy Signal Radar
+                            </button>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-secondary" onclick="saveCurrentChartToCloud()" title="Save drawings, indicators, and notes to cloud storage">
+                                💾 Save Drawings to Cloud
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TradingView Advanced Real-Time Chart Container (Exact active view with drawings, indicators, etc.) -->
+                    <div class="chart-container" id="tradingview_active_chart" style="flex:1; width:100%; min-height:480px;">
+                        <!-- Embeds TradingView Advanced Widget -->
+                    </div>
+
+                    <!-- Lightweight Charts Container for Strategy BUY/SELL markers (hidden by default) -->
+                    <div class="chart-container" id="lightweight_chart_container" style="flex:1; width:100%; min-height:480px; display:none;">
+                        <!-- Lightweight Charts Canvas -->
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- Strategy Editor Modal -->
+    <!-- ================================================================ -->
+    <div class="modal-overlay" id="editorModal">
+        <div class="modal" style="max-width:920px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="modal-title" id="editorModalTitle">Custom Strategy Editor</span>
+                    <span class="ai-badge">🤖 AI Assisted</span>
+                </div>
+                <button class="btn btn-ghost btn-icon" onclick="closeEditorModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- AI Prompt Section -->
+                <div class="ai-prompt-section">
+                    <label class="form-label">✨ Describe your strategy in plain English</label>
+                    <div class="ai-prompt-wrapper">
+                        <textarea class="ai-prompt-input" id="aiPromptInput"
+                                  placeholder="Example: Buy when 20 EMA crosses above 50 EMA and RSI is above 50. Sell when 20 EMA crosses below 50 EMA."></textarea>
+                    </div>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <button class="btn btn-secondary btn-sm" id="aiGenerateBtn" onclick="generateWithAI()">
+                            🤖 Generate Python Code
+                        </button>
+                        <span class="text-xs text-muted">Powered by Gemini AI (or built-in offline rule engine)</span>
+                    </div>
+                </div>
+
+                <!-- Strategy ID -->
+                <div class="form-group">
+                    <label class="form-label">Strategy Identifier</label>
+                    <input type="text" class="form-input" id="editorStrategyId"
+                           placeholder="my_supertrend_strategy" style="font-family:var(--font-mono);">
+                </div>
+
+                <!-- Code Editor -->
+                <div class="form-group">
+                    <label class="form-label">Python Code (calculate_signals function)</label>
+                    <div class="code-editor-wrapper">
+                        <textarea class="code-editor" id="codeEditor"
+                                  spellcheck="false" autocomplete="off" autocorrect="off"
+                                  placeholder="# Write or paste your custom strategy Python code here..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditorModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveStrategy()">💾 Save Strategy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- User Authentication Modal (Login / Sign Up / OTP Verification / Reset) -->
+    <!-- ================================================================ -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal" style="max-width:440px;">
+            <div class="modal-header">
+                <span class="modal-title" id="authModalTitle">👤 Account Login</span>
+                <button class="btn btn-ghost btn-icon" onclick="closeAuthModal()">✕</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- 1. Sign In Tab -->
+                <div id="authSignInForm">
+                    <div class="form-group">
+                        <label class="form-label">Username or Email</label>
+                        <input type="text" class="form-input" id="loginUsername" placeholder="e.g. trader123 or you@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <a href="javascript:void(0)" onclick="showAuthView('forgot')" style="font-size:0.82rem; color:var(--accent);">
+                            Forgot Password?
+                        </a>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="submitLogin()">Sign In</button>
+                    <div class="auth-switch-text">
+                        Don't have an account? <a href="javascript:void(0)" onclick="showAuthView('register')">Create an Account</a>
+                    </div>
+                </div>
+
+                <!-- 2. Sign Up Tab -->
+                <div id="authRegisterForm" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label">Choose Username</label>
+                        <input type="text" class="form-input" id="regUsername" placeholder="e.g. rahul_trader">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address (for OTP verification)</label>
+                        <input type="email" class="form-input" id="regEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password (min 6 characters)</label>
+                        <input type="password" class="form-input" id="regPassword" placeholder="••••••••">
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="submitRegister()">
+                        Send Verification Code & Register
+                    </button>
+                    <div class="auth-switch-text">
+                        Already have an account? <a href="javascript:void(0)" onclick="showAuthView('signin')">Sign In</a>
+                    </div>
+                </div>
+
+                <!-- 3. Email OTP Verification Tab -->
+                <div id="authVerifyOtpForm" class="hidden">
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div style="font-size:2rem; margin-bottom:6px;">✉️</div>
+                        <div style="font-weight:600; font-size:1.1rem;">Verify Your Email</div>
+                        <p class="text-xs text-muted" id="verifyOtpEmailDisplay">Enter the 6-digit OTP sent to your email.</p>
+                    </div>
+
+                    <div id="devOtpBanner" class="dev-otp-banner hidden">
+                        <span id="devOtpCodeLabel">OTP: ------</span>
+                        <button class="btn btn-xs btn-ghost" onclick="fillDevOtp()">Auto-Fill</button>
+                    </div>
+
+                    <div class="form-group" style="text-align:center;">
+                        <input type="text" class="form-input otp-input-field" id="verifyOtpInput"
+                               placeholder="123456" maxlength="6">
+                    </div>
+
+                    <button class="btn btn-primary w-100" onclick="submitOtpVerification()">Verify & Activate</button>
+
+                    <div style="display:flex; justify-content:space-between; margin-top:14px; font-size:0.82rem;">
+                        <a href="javascript:void(0)" onclick="resendOtp()" style="color:var(--accent);">Resend Code</a>
+                        <a href="javascript:void(0)" onclick="showAuthView('signin')" style="color:var(--text-tertiary);">Back to Login</a>
+                    </div>
+                </div>
+
+                <!-- 4. Forgot / Reset Password Tab -->
+                <div id="authForgotForm" class="hidden">
+                    <div id="forgotStep1">
+                        <div class="form-group">
+                            <label class="form-label">Enter Registered Email</label>
+                            <input type="email" class="form-input" id="forgotEmail" placeholder="you@example.com">
+                        </div>
+                        <button class="btn btn-primary w-100" onclick="submitForgotPassword()">Send Reset Code</button>
+                        <div class="auth-switch-text">
+                            Remember your password? <a href="javascript:void(0)" onclick="showAuthView('signin')">Sign In</a>
+                        </div>
+                    </div>
+
+                    <div id="forgotStep2" class="hidden">
+                        <div class="form-group">
+                            <label class="form-label">6-Digit Reset Code</label>
+                            <input type="text" class="form-input" id="resetOtpInput" placeholder="123456" maxlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-input" id="resetNewPassword" placeholder="••••••••">
+                        </div>
+                        <button class="btn btn-primary w-100" onclick="submitPasswordReset()">Update Password</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- Free Cloud Storage & Sync Modal -->
+    <!-- ================================================================ -->
+    <div class="modal-overlay" id="cloudModal">
+        <div class="modal" style="max-width:560px;">
+            <div class="modal-header">
+                <span class="modal-title">☁️ Free Cloud Storage & Sync</span>
+                <button class="btn btn-ghost btn-icon" onclick="closeCloudModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.85rem; color:var(--text-tertiary); margin-top:0;">
+                    Your custom strategies, chart drawings, notes, and backtest results are securely saved and synced.
+                </p>
+
+                <div class="cloud-stats-grid">
+                    <div class="cloud-stat-card">
+                        <div class="stat-number" id="cloudStatStrats">0</div>
+                        <div class="stat-label">Strategies</div>
+                    </div>
+                    <div class="cloud-stat-card">
+                        <div class="stat-number" id="cloudStatDrawings">0</div>
+                        <div class="stat-label">Saved Charts</div>
+                    </div>
+                    <div class="cloud-stat-card">
+                        <div class="stat-number" id="cloudStatBacktests">0</div>
+                        <div class="stat-label">Backtests</div>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:600; font-size:0.9rem;">📥 Export Full Cloud Backup</div>
+                            <div class="text-xs text-muted">Download all your strategies, drawings & backtests as JSON</div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="exportCloudBackup()">Download Backup</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:600; font-size:0.9rem;">📤 Restore from Backup</div>
+                            <div class="text-xs text-muted">Upload a previously exported backup file</div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('cloudBackupFileInput').click()">Upload Backup</button>
+                        <input type="file" id="cloudBackupFileInput" accept=".json" style="display:none;" onchange="importCloudBackup(event)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeCloudModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- Settings & SMTP Configuration Modal -->
+    <!-- ================================================================ -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal" style="max-width:560px;">
+            <div class="modal-header">
+                <span class="modal-title">⚙️ Settings & Integrations</span>
+                <button class="btn btn-ghost btn-icon" onclick="closeSettingsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-grid">
+                    <!-- Google Gemini API Key -->
+                    <div class="form-group">
+                        <label class="form-label">Google Gemini API Key (Optional)</label>
+                        <input type="password" class="form-input" id="settingsGeminiKey"
+                               placeholder="Enter your Gemini API key">
+                        <div class="text-xs text-muted mt-2">
+                            Enables advanced AI strategy generation from natural language prompts.
+                            Free key available at <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>.
+                        </div>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <!-- Outgoing Email (SMTP) Configuration for Live Verification Emails -->
+                    <div style="margin-bottom:6px;">
+                        <span style="font-weight:600; font-size:0.95rem;">📧 SMTP Email Settings (for Live Verification OTPs)</span>
+                        <div class="text-xs text-muted">Optional. If empty, OTPs are provided directly in the interface for instant local testing.</div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px;">
+                        <div class="form-group">
+                            <label class="form-label">SMTP Host</label>
+                            <input type="text" class="form-input" id="settingsSmtpHost" placeholder="smtp.gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Port</label>
+                            <input type="number" class="form-input" id="settingsSmtpPort" value="587">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                        <div class="form-group">
+                            <label class="form-label">SMTP Username / Email</label>
+                            <input type="text" class="form-input" id="settingsSmtpUser" placeholder="you@gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SMTP Password / App Key</label>
+                            <input type="password" class="form-input" id="settingsSmtpPass" placeholder="App Password">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end;">
+                        <button class="btn btn-sm btn-ghost" onclick="testSmtpConnection()">🧪 Test SMTP Connection</button>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <!-- Cache Management -->
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-label">Market Data Cache</div>
+                            <div class="settings-sublabel">Clear cached OHLCV candle files to force fresh Yahoo Finance downloads</div>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="clearCache()">Clear Cache</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- Toast Notification Container -->
+    <!-- ================================================================ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ================================================================ -->
+    <!-- Scripts -->
+    <!-- ================================================================ -->
+    <script src="/static/js/chart.js"></script>
+    <script src="/static/js/app.js"></script>
+
+</body>
+</html>

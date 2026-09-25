@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.cache/
+*.parquet
+.env
+.settings.json
+*.db
+*.sqlite3
+.DS_Store
+Thumbs.db
