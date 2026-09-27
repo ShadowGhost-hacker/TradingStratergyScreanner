@@ -412,7 +412,12 @@ async function saveStrategy() {
             },
             body: JSON.stringify({ id, code })
         });
-        const data = await res.json();
+        let data;
+        try {
+            data = await res.json();
+        } catch (_) {
+            throw new Error(`Server returned an unexpected response (status ${res.status}). Check server logs.`);
+        }
 
         if (data.success) {
             showToast(`Strategy "${id}" saved successfully!`, 'success');

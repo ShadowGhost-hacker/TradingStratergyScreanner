@@ -413,49 +413,58 @@ async def get_strategy_code(strategy_id: str):
 @app.post("/api/strategy/save")
 async def save_strategy(request: Request):
     """Save or update a strategy."""
-    data = await request.json()
-    strategy_id = data.get("id", "").strip()
-    code = data.get("code", "")
-    
-    if not strategy_id:
-        return JSONResponse(status_code=400, content={"error": "Strategy ID is required"})
-    
-    # Sanitize ID
-    strategy_id = strategy_id.replace(" ", "_").lower()
-    strategy_id = "".join(c for c in strategy_id if c.isalnum() or c == "_")
-    
-    result = scanner_engine.save_strategy_code(strategy_id, code)
-    
-    # Also save to user DB if authenticated
-    user = _get_auth_user(request)
-    if user:
-        name = strategy_id.replace("_", " ").title()
-        db.save_user_strategy(user["id"], strategy_id, name, code, "")
-        
-    return result
+    try:
+        data = await request.json()
+        strategy_id = data.get("id", "").strip()
+        code = data.get("code", "")
+
+        if not strategy_id:
+            return JSONResponse(status_code=400, content={"error": "Strategy ID is required"})
+
+        # Sanitize ID
+        strategy_id = strategy_id.replace(" ", "_").lower()
+        strategy_id = "".join(c for c in strategy_id if c.isalnum() or c == "_")
+
+        result = scanner_engine.save_strategy_code(strategy_id, code)
+
+        # Also save to user DB if authenticated
+        user = _get_auth_user(request)
+        if user:
+            name = strategy_id.replace("_", " ").title()
+            db.save_user_strategy(user["id"], strategy_id, name, code, "")
+
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Server error: {str(e)}"})
 
 
 @app.delete("/api/strategy/{strategy_id}")
 async def delete_strategy(strategy_id: str, request: Request):
     """Delete a strategy."""
-    success = scanner_engine.delete_strategy(strategy_id)
-    user = _get_auth_user(request)
-    if user:
-        db.delete_user_strategy(user["id"], strategy_id)
-    return {"success": success}
+    try:
+        success = scanner_engine.delete_strategy(strategy_id)
+        user = _get_auth_user(request)
+        if user:
+            db.delete_user_strategy(user["id"], strategy_id)
+        return JSONResponse(content={"success": success})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Server error: {str(e)}"})
 
 
 @app.post("/api/strategy/upload")
 async def upload_strategy(file: UploadFile = File(...)):
     """Upload a strategy .py file."""
-    if not file.filename.endswith(".py"):
-        return JSONResponse(status_code=400, content={"error": "Only .py files are accepted"})
-    
-    content = await file.read()
-    strategy_id = file.filename.replace(".py", "").replace(" ", "_").lower()
-    
-    result = scanner_engine.save_strategy_code(strategy_id, content.decode("utf-8"))
-    return result
+    try:
+        if not file.filename.endswith(".py"):
+            return JSONResponse(status_code=400, content={"error": "Only .py files are accepted"})
+
+        content = await file.read()
+        strategy_id = file.filename.replace(".py", "").replace(" ", "_").lower()
+
+        result = scanner_engine.save_strategy_code(strategy_id, content.decode("utf-8"))
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Server error: {str(e)}"})
 
 
 # ============================================================================
