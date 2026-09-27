@@ -6,6 +6,8 @@ candle tolerance (0-10 bars) and multi-threading for performance.
 """
 
 import importlib.util
+import importlib
+import types
 import pandas as pd
 import numpy as np
 import traceback
@@ -14,6 +16,7 @@ import time
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from data_provider import fetch_ohlcv
+import db as _db
 
 # ============================================================================
 # Strategy Loader
@@ -71,64 +74,151 @@ def load_strategy(filepath: str) -> dict:
     return result
 
 
+def load_strategy_from_code(strategy_id: str, code: str) -> dict:
+    """
+    Load a strategy from a code string (used when running on cloud with read-only filesystem).
+    Compiles and executes the Python code into a dynamic module.
+
+    Returns:
+        dict with keys: id, name, description, filepath, module, error
+    """
+    result = {
+        "id": strategy_id,
+        "name": strategy_id.replace("_", " ").title(),
+        "description": "",
+        "filepath": f"<db:{strategy_id}>",
+        "module": None,
+        "error": None
+    }
+
+    try:
+        # Create a blank module and exec the code into it
+        module = types.ModuleType(strategy_id)
+        exec(compile(code, f"<db:{strategy_id}>", "exec"), module.__dict__)
+
+        if not hasattr(module, "evaluate"):
+            result["error"] = "Strategy file must contain an 'evaluate(df)' function."
+            return result
+
+        result["module"] = module
+
+        if hasattr(module, "STRATEGY_NAME"):
+            result["name"] = module.STRATEGY_NAME
+        if hasattr(module, "STRATEGY_DESCRIPTION"):
+            result["description"] = module.STRATEGY_DESCRIPTION
+        elif module.__doc__:
+            result["description"] = module.__doc__.strip().split("\n")[0]
+
+    except Exception as e:
+        result["error"] = f"Failed to load from DB: {str(e)}"
+
+    return result
+
+
 def load_all_strategies() -> list:
     """
-    Load all strategy files from the strategies directory.
-    
+    Load all strategies from:
+      1. The strategies/ directory (file-based, local)
+      2. The shared DB pool (cloud-saved, works on Render)
+    File-based strategies take priority if the same ID exists in both.
+
     Returns:
         List of strategy metadata dicts
     """
-    strategies = []
-    
-    if not STRATEGIES_DIR.exists():
-        return strategies
-    
-    for py_file in sorted(STRATEGIES_DIR.glob("*.py")):
-        if py_file.name.startswith("_"):
-            continue
-        strategy = load_strategy(str(py_file))
-        strategies.append(strategy)
-    
-    return strategies
+    strategies = {}
+
+    # --- Load from DB shared pool first (lower priority) ---
+    try:
+        for s in _db.get_shared_strategies():
+            sid = s["id"]
+            loaded = load_strategy_from_code(sid, s["code"])
+            strategies[sid] = loaded
+    except Exception:
+        pass
+
+    # --- Load from files (higher priority, overrides DB) ---
+    if STRATEGIES_DIR.exists():
+        for py_file in sorted(STRATEGIES_DIR.glob("*.py")):
+            if py_file.name.startswith("_"):
+                continue
+            strategy = load_strategy(str(py_file))
+            strategies[strategy["id"]] = strategy  # overrides DB version if same ID
+
+    return list(strategies.values())
 
 
 def get_strategy_code(strategy_id: str) -> str:
-    """Read the source code of a strategy file."""
+    """Read the source code of a strategy — checks file first, then DB."""
     filepath = STRATEGIES_DIR / f"{strategy_id}.py"
     if filepath.exists():
         return filepath.read_text(encoding="utf-8")
-    return ""
+    # Fall back to DB shared pool
+    try:
+        return _db.get_shared_strategy_code(strategy_id)
+    except Exception:
+        return ""
 
 
 def save_strategy_code(strategy_id: str, code: str) -> dict:
     """
-    Save strategy code to a file and validate it.
-    
+    Save strategy code.
+    - Tries to write a .py file first (works locally).
+    - If that fails (read-only filesystem on Render/cloud), falls back to DB shared pool.
+    - Always validates the code by compiling it into a temporary module.
+
     Returns:
         dict with keys: success, error, strategy
     """
+    # Always validate code first (before touching disk or DB)
+    validation = load_strategy_from_code(strategy_id, code)
+    if validation["error"]:
+        return {"success": False, "error": validation["error"], "strategy": validation}
+
+    # Try file-based save
     filepath = STRATEGIES_DIR / f"{strategy_id}.py"
-    
     try:
         filepath.write_text(code, encoding="utf-8")
-        
-        # Validate by loading
+        # Reload from file to confirm
         strategy = load_strategy(str(filepath))
         if strategy["error"]:
             return {"success": False, "error": strategy["error"], "strategy": strategy}
-        
+        # Also sync to DB shared pool so cloud has it too
+        try:
+            _db.save_shared_strategy(strategy_id, strategy["name"], code, strategy["description"])
+        except Exception:
+            pass
         return {"success": True, "error": None, "strategy": strategy}
+    except (OSError, PermissionError):
+        # File system is read-only (e.g., Render cloud) — save to DB only
+        pass
     except Exception as e:
         return {"success": False, "error": str(e), "strategy": None}
 
+    # Fallback: DB-only save
+    try:
+        _db.save_shared_strategy(strategy_id, validation["name"], code, validation["description"])
+        return {"success": True, "error": None, "strategy": validation}
+    except Exception as e:
+        return {"success": False, "error": f"Could not save to file or database: {str(e)}", "strategy": None}
+
 
 def delete_strategy(strategy_id: str) -> bool:
-    """Delete a strategy file."""
+    """Delete a strategy from file and DB shared pool."""
+    deleted = False
     filepath = STRATEGIES_DIR / f"{strategy_id}.py"
     if filepath.exists():
-        filepath.unlink()
-        return True
-    return False
+        try:
+            filepath.unlink()
+            deleted = True
+        except Exception:
+            pass
+    # Also remove from DB shared pool
+    try:
+        if _db.delete_shared_strategy(strategy_id):
+            deleted = True
+    except Exception:
+        pass
+    return deleted
 
 
 # ============================================================================

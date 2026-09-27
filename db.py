@@ -70,8 +70,7 @@ def init_db():
         code TEXT NOT NULL,
         description TEXT,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, strategy_id),
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        UNIQUE(user_id, strategy_id)
     )
     """)
 
@@ -333,6 +332,41 @@ def delete_user_strategy(user_id: int, strategy_id: str) -> bool:
         return cur.rowcount > 0
     finally:
         conn.close()
+
+
+# ============================================================================
+# Shared Strategy Pool (user_id=0, available to all — used on cloud/Render)
+# ============================================================================
+
+SHARED_USER_ID = 0  # Sentinel user ID for globally shared strategies
+
+
+def save_shared_strategy(strategy_id: str, name: str, code: str, description: str = "") -> dict:
+    """Save a strategy to the shared pool (accessible without login)."""
+    return save_user_strategy(SHARED_USER_ID, strategy_id, name, code, description)
+
+
+def get_shared_strategies() -> List[dict]:
+    """Get all strategies from the shared pool."""
+    return get_user_strategies(SHARED_USER_ID)
+
+
+def get_shared_strategy_code(strategy_id: str) -> str:
+    """Get code for a specific shared strategy."""
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT code FROM user_strategies WHERE user_id = ? AND strategy_id = ?",
+            (SHARED_USER_ID, strategy_id)
+        ).fetchone()
+        return row["code"] if row else ""
+    finally:
+        conn.close()
+
+
+def delete_shared_strategy(strategy_id: str) -> bool:
+    """Delete a strategy from the shared pool."""
+    return delete_user_strategy(SHARED_USER_ID, strategy_id)
 
 
 # ============================================================================
