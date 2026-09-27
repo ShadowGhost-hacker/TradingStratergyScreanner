@@ -3,13 +3,16 @@
 # 📈 StrategyScreener & Backtester
 ### Real-Time Indian Stock Market (NSE & BSE) Multi-Strategy Screener, Backtesting Engine & TradingView Studio
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-tradingstratergyscreanner.onrender.com-00C853.svg?style=for-the-badge)](https://tradingstratergyscreanner.onrender.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
 [![TradingView](https://img.shields.io/badge/TradingView-Active_Charting_Suite-131722.svg?style=for-the-badge&logo=tradingview&logoColor=white)](https://www.tradingview.com)
 [![Yahoo Finance](https://img.shields.io/badge/Data-Yahoo_Finance_API-6001D2.svg?style=for-the-badge&logo=yahoo&logoColor=white)](https://finance.yahoo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f59b.svg?style=for-the-badge)](LICENSE)
 
-[**Explore Features**](#-key-features) • [**Live Architecture**](#-architecture--tech-stack) • [**Quickstart Guide**](#-quickstart-guide) • [**Strategy API Spec**](#-writing-custom-strategies) • [**Cloud Deployment**](#-one-click-free-cloud-deployment)
+🌐 **[Open Live Website →](https://tradingstratergyscreanner.onrender.com/)**
+
+[**Explore Features**](#-key-features) • [**Live Architecture**](#-architecture--tech-stack) • [**Quickstart Guide**](#-quickstart-guide) • [**Strategy API Spec**](#-writing-custom-strategies)
 
 </div>
 
@@ -187,39 +190,13 @@ def calculate_signals(df: pd.DataFrame) -> pd.Series:
 
 ---
 
-## ☁️ One-Click Free Cloud Deployment
+## ☁️ Live Deployment
 
-You can host this entire platform online with a **free permanent domain and automatic SSL** on [Render.com](https://render.com) using Continuous Deployment (CI/CD).
+This platform is live and publicly accessible at:
 
-### Deploy to Render in 3 Steps:
+### 🌐 [https://tradingstratergyscreanner.onrender.com/](https://tradingstratergyscreanner.onrender.com/)
 
-1. **Push your code to GitHub**:
-   ```bash
-   git init
-   git add .
-   git commit -m "Deploying trading screener"
-   git branch -M main
-   git remote add origin https://github.com/<YOUR_USERNAME>/<YOUR_REPO>.git
-   git push -u origin main
-   ```
-
-2. **Connect to Render**:
-   - Go to [render.com](https://render.com) and log in with your GitHub account.
-   - Click **New +** -> **Web Service**.
-   - Select your repository.
-   - All settings are automatically auto-detected from our included `Procfile` and `render.yaml`:
-     - **Environment**: `Python 3`
-     - **Build Command**: `pip install -r requirements.txt`
-     - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-     - **Plan**: Select **Free ($0/month)**.
-
-3. **Live Deployment**:
-   - Click **Deploy Web Service**.
-   - Your live website will be available at:
-     ```
-     https://your-screener-name.onrender.com
-     ```
-   - **Continuous Updates**: Whenever you commit and run `git push` to your GitHub repository, Render automatically rebuilds and deploys the new updates within 60 seconds with zero downtime!
+Hosted on [Render.com](https://render.com) with automatic SSL and continuous deployment — every push to the GitHub repository triggers an automatic redeploy within ~60 seconds.
 
 ---
 
