@@ -3,14 +3,14 @@
 # 📈 StrategyScreener & Backtester
 ### Real-Time Indian Stock Market (NSE & BSE) Multi-Strategy Screener, Backtesting Engine & TradingView Studio
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-tradingstratergyscreanner.onrender.com-00C853.svg?style=for-the-badge)](https://tradingstratergyscreanner.onrender.com/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-tradingstratergyscreanner.ai.studio-00C853.svg?style=for-the-badge)](https://tradingstratergyscreanner.ai.studio)
+[![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-4.21+-000000.svg?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
 [![TradingView](https://img.shields.io/badge/TradingView-Active_Charting_Suite-131722.svg?style=for-the-badge&logo=tradingview&logoColor=white)](https://www.tradingview.com)
 [![Yahoo Finance](https://img.shields.io/badge/Data-Yahoo_Finance_API-6001D2.svg?style=for-the-badge&logo=yahoo&logoColor=white)](https://finance.yahoo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f59b.svg?style=for-the-badge)](LICENSE)
 
-🌐 **[Open Live Website →](https://tradingstratergyscreanner.onrender.com/)**
+🌐 **[Open Live Website →](https://tradingstratergyscreanner.ai.studio)**
 
 [**Explore Features**](#-key-features) • [**Live Architecture**](#-architecture--tech-stack) • [**Quickstart Guide**](#-quickstart-guide) • [**Strategy API Spec**](#-writing-custom-strategies)
 
@@ -194,9 +194,9 @@ def calculate_signals(df: pd.DataFrame) -> pd.Series:
 
 This platform is live and publicly accessible at:
 
-### 🌐 [https://tradingstratergyscreanner.onrender.com/](https://tradingstratergyscreanner.onrender.com/)
+### 🌐 [https://tradingstratergyscreanner.ai.studio](https://tradingstratergyscreanner.ai.studio)
 
-Hosted on [Render.com](https://render.com) with automatic SSL and continuous deployment — every push to the GitHub repository triggers an automatic redeploy within ~60 seconds.
+Published with instant updates and automatic HTTPS.
 
 ---
 
