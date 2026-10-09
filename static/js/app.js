@@ -979,8 +979,7 @@ function exportBacktestTradesCSV() {
 async function saveBacktestToCloud() {
     if (!AppState.backtestResult) return;
 
-    const title = prompt('Enter a title for this backtest record:', `Backtest ${new Date().toLocaleDateString()}`);
-    if (title === null) return;
+    const title = `Backtest ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
 
     try {
         const token = localStorage.getItem('auth_token') || '';
@@ -1008,6 +1007,33 @@ async function saveBacktestToCloud() {
         }
     } catch (err) {
         showToast('Save error: ' + err.message, 'error');
+    }
+}
+
+async function showSavedBacktests() {
+    try {
+        const token = localStorage.getItem('auth_token') || '';
+        const res = await fetch('/api/backtest/saved', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const records = data.backtests || [];
+        if (records.length > 0) {
+            const latestId = records[0].id;
+            const detailRes = await fetch(`/api/backtest/saved/${latestId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const detail = await detailRes.json();
+            if (detail && detail.metrics) {
+                AppState.backtestResult = detail;
+                renderBacktestResults(detail);
+                showToast(`Loaded saved backtest: ${detail.title}`, 'info');
+            }
+        } else {
+            showToast('No saved backtests yet. Run a simulation and click Save to Cloud.', 'info');
+        }
+    } catch (err) {
+        console.error('Failed to load saved backtests:', err);
     }
 }
 
@@ -1384,9 +1410,6 @@ async function loadSettings() {
         const res = await fetch('/api/settings');
         const data = await res.json();
 
-        if (data.gemini_api_key_masked) {
-            document.getElementById('settingsGeminiKey').placeholder = `Current: ${data.gemini_api_key_masked}`;
-        }
         if (data.smtp_host) document.getElementById('settingsSmtpHost').value = data.smtp_host;
         if (data.smtp_port) document.getElementById('settingsSmtpPort').value = data.smtp_port;
         if (data.smtp_user) document.getElementById('settingsSmtpUser').value = data.smtp_user;
@@ -1406,7 +1429,6 @@ function closeSettingsModal() {
 }
 
 async function saveSettings() {
-    const geminiKey = document.getElementById('settingsGeminiKey').value.trim();
     const smtpHost = document.getElementById('settingsSmtpHost').value.trim();
     const smtpPort = parseInt(document.getElementById('settingsSmtpPort').value, 10) || 587;
     const smtpUser = document.getElementById('settingsSmtpUser').value.trim();
@@ -1417,7 +1439,6 @@ async function saveSettings() {
         smtp_port: smtpPort,
         smtp_user: smtpUser
     };
-    if (geminiKey) payload.gemini_api_key = geminiKey;
     if (smtpPass) payload.smtp_pass = smtpPass;
 
     try {

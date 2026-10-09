@@ -3,11 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Scan Indian Stock Market (NSE & BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
-    <title>📈 Trading Strategy Screener & Backtester | NSE & BSE</title>
+    <meta name="description" content="Scan Indian Stock Market (NSE &amp; BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
+    <meta property="og:title" content="Trading Strategy Screener &amp; Backtester">
+    <meta property="og:description" content="Scan Indian Stock Market (NSE &amp; BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
+    <title>Trading Strategy Screener &amp; Backtester</title>
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Browser extension compatibility guard -->
+    <script>
+        (function() {
+            try {
+                var _currentFetch = window.fetch ? window.fetch.bind(window) : null;
+                Object.defineProperty(window, 'fetch', {
+                    get: function() { return _currentFetch; },
+                    set: function(fn) { _currentFetch = fn; },
+                    configurable: true,
+                    enumerable: true
+                });
+            } catch (e) {}
+
+            window.addEventListener('error', function(event) {
+                if (event.filename && event.filename.indexOf('chrome-extension://') !== -1) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    return true;
+                }
+            }, true);
+        })();
+    </script>
 
     <!-- TradingView Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -659,19 +684,6 @@
             </div>
             <div class="modal-body">
                 <div class="settings-grid">
-                    <!-- Google Gemini API Key -->
-                    <div class="form-group">
-                        <label class="form-label">Google Gemini API Key (Optional)</label>
-                        <input type="password" class="form-input" id="settingsGeminiKey"
-                               placeholder="Enter your Gemini API key">
-                        <div class="text-xs text-muted mt-2">
-                            Enables advanced AI strategy generation from natural language prompts.
-                            Free key available at <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>.
-                        </div>
-                    </div>
-
-                    <div class="settings-divider"></div>
-
                     <!-- Outgoing Email (SMTP) Configuration for Live Verification Emails -->
                     <div style="margin-bottom:6px;">
                         <span style="font-weight:600; font-size:0.95rem;">📧 SMTP Email Settings (for Live Verification OTPs)</span>
