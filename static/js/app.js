@@ -27,7 +27,7 @@ const AppState = {
     currentFilter: 'all',        // 'all' | 'buy' | 'sell'
     chartSymbol: null,
     chartExchange: null,
-    theme: 'dark',
+    theme: 'light',
     currentUser: null,
     authToken: localStorage.getItem('auth_token') || '',
     backtestResult: null,
@@ -108,7 +108,7 @@ function setupEventListeners() {
 // ============================================================================
 
 function initTheme() {
-    const saved = localStorage.getItem('theme') || 'dark';
+    const saved = localStorage.getItem('theme') || 'light';
     setTheme(saved);
 }
 
@@ -629,7 +629,7 @@ async function cancelScan() {
 function resetScanUI() {
     const scanBtn = document.getElementById('scanBtn');
     scanBtn.disabled = false;
-    scanBtn.textContent = '🚀 Start Market Scan';
+    scanBtn.textContent = 'Execute Scan 🚀';
 
     const progressWrapper = document.getElementById('scanProgressWrapper');
     progressWrapper.classList.remove('active');
@@ -651,6 +651,47 @@ function renderResults() {
     }
 
     countEl.textContent = `${filtered.length} matching stock${filtered.length === 1 ? '' : 's'} found`;
+
+    // Update Variation 23 KPI summary strip
+    const activeSignalsEl = document.getElementById('kpiActiveSignals');
+    const sentimentCard = document.getElementById('kpiSentimentCard');
+    const sentimentValue = document.getElementById('kpiSentimentValue');
+    const sentimentDesc = document.getElementById('kpiSentimentDesc');
+    const scopeVal = document.getElementById('kpiScopeValue');
+
+    if (activeSignalsEl) activeSignalsEl.textContent = filtered.length;
+    if (scopeVal) {
+        const uCount = AppState.selectedUniverses.size;
+        scopeVal.textContent = uCount > 1 ? `${uCount} UNIV` : (Array.from(AppState.selectedUniverses)[0] || 'NSE/BSE').toUpperCase();
+    }
+
+    if (sentimentValue && sentimentCard) {
+        if (filtered.length > 0) {
+            const buyCount = filtered.filter(r => r.signal === 'BUY').length;
+            const sellCount = filtered.filter(r => r.signal === 'SELL').length;
+            if (buyCount > sellCount) {
+                sentimentValue.textContent = 'BULL';
+                sentimentDesc.textContent = `${Math.round((buyCount / filtered.length) * 100)}% Net-positive pressure`;
+                sentimentCard.style.background = 'var(--accent)';
+                sentimentCard.style.color = '#0A0A0A';
+            } else if (sellCount > buyCount) {
+                sentimentValue.textContent = 'BEAR';
+                sentimentDesc.textContent = `${Math.round((sellCount / filtered.length) * 100)}% Net-negative pressure`;
+                sentimentCard.style.background = 'var(--danger)';
+                sentimentCard.style.color = '#FFFFFF';
+            } else {
+                sentimentValue.textContent = 'NEUT';
+                sentimentDesc.textContent = 'Balanced buy & sell signals';
+                sentimentCard.style.background = 'var(--bg)';
+                sentimentCard.style.color = 'var(--ink)';
+            }
+        } else {
+            sentimentValue.textContent = 'WAIT';
+            sentimentDesc.textContent = 'Awaiting market scan';
+            sentimentCard.style.background = 'var(--accent)';
+            sentimentCard.style.color = '#0A0A0A';
+        }
+    }
 
     if (filtered.length === 0) {
         tbody.innerHTML = `
@@ -675,25 +716,24 @@ function renderResults() {
         const isBuy = r.signal === 'BUY';
         const changeClass = r.change_pct >= 0 ? 'text-buy' : 'text-sell';
         const changeSign = r.change_pct >= 0 ? '+' : '';
+        const logicStr = (r.details || []).map(d => d.strategy_name).join(' + ') || 'STRATEGY CONF';
 
         tr.innerHTML = `
-            <td><strong style="color:var(--text-primary); cursor:pointer;">${r.symbol}</strong></td>
-            <td><span class="badge ${r.exchange === 'BSE' ? 'badge-danger' : 'badge-primary'}">${r.exchange}</span></td>
-            <td style="font-family:var(--font-mono);">₹${r.price.toFixed(2)}</td>
-            <td class="${changeClass}" style="font-family:var(--font-mono);">${changeSign}${r.change_pct.toFixed(2)}%</td>
+            <td class="ticker-cell" style="font-weight:900; font-family:var(--font-display);">${r.symbol}</td>
+            <td class="mono">${r.exchange}</td>
+            <td class="mono price-cell">₹${r.price.toFixed(2)}</td>
+            <td class="mono change-cell ${changeClass}">${changeSign}${r.change_pct.toFixed(2)}%</td>
             <td>
                 <span class="signal-badge ${isBuy ? 'signal-buy' : 'signal-sell'}">
-                    ${isBuy ? '🟢 BUY' : '🔴 SELL'}
+                    ${isBuy ? 'BUY' : 'SELL'}
                 </span>
             </td>
-            <td>
-                ${(r.details || []).map(d =>
-                    `<span class="detail-chip" title="Signal: ${d.signal} (${d.bars_ago} bars ago)">${escapeHtml(d.strategy_name)}</span>`
-                ).join(' ')}
+            <td class="strategy-desc" style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(logicStr)}">
+                ${escapeHtml(logicStr)}
             </td>
             <td>
-                <button class="btn btn-xs btn-primary" onclick="openChartForSymbol('${r.symbol}', '${r.exchange}')">
-                    📊 Chart
+                <button class="signal-badge" style="cursor:pointer; background: var(--ink); color:white; border:1.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size:0.68rem;" onclick="openChartForSymbol('${r.symbol}', '${r.exchange}')">
+                    VIEW CHART
                 </button>
             </td>
         `;
@@ -895,10 +935,13 @@ function renderEquityCurveChart(curve) {
     const yScale = (val) => height - padding.bottom - ((val - minVal) / (maxVal - minVal || 1)) * (height - padding.top - padding.bottom);
 
     // Build SVG Path points
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const points = curve.map((c, i) => `${xScale(i)},${yScale(c.equity)}`).join(' ');
     const isProfitable = curve[curve.length - 1].equity >= curve[0].equity;
-    const strokeColor = isProfitable ? '#00f59b' : '#ff3b57';
-    const fillColor = isProfitable ? 'rgba(0, 245, 155, 0.15)' : 'rgba(255, 59, 87, 0.15)';
+    const strokeColor = isProfitable ? (isDark ? '#22C55E' : '#16834A') : (isDark ? '#EF4444' : '#D64545');
+    const fillColor = isProfitable ? (isDark ? 'rgba(34, 197, 94, 0.16)' : 'rgba(22, 131, 74, 0.12)') : (isDark ? 'rgba(239, 68, 68, 0.16)' : 'rgba(214, 69, 69, 0.12)');
+    const baselineColor = isDark ? 'rgba(255, 255, 255, 0.12)' : '#DCE7DE';
+    const axisTextColor = isDark ? '#9DB4A7' : '#849188';
 
     const areaPoints = `${xScale(0)},${height - padding.bottom} ${points} ${xScale(curve.length - 1)},${height - padding.bottom}`;
 
@@ -912,15 +955,15 @@ function renderEquityCurveChart(curve) {
             </defs>
             <!-- Baseline -->
             <line x1="${padding.left}" y1="${yScale(curve[0].equity)}" x2="${width - padding.right}" y2="${yScale(curve[0].equity)}"
-                  stroke="rgba(255,255,255,0.15)" stroke-dasharray="4"/>
+                  stroke="${baselineColor}" stroke-dasharray="4"/>
             <!-- Area & Line -->
             <polygon points="${areaPoints}" fill="url(#eqGradient)"/>
             <polyline fill="none" stroke="${strokeColor}" stroke-width="2.5" points="${points}" stroke-linejoin="round"/>
             <!-- Axis Labels -->
-            <text x="${padding.left - 8}" y="${padding.top + 10}" fill="var(--text-tertiary)" font-size="11" text-anchor="end">₹${Math.round(maxVal).toLocaleString()}</text>
-            <text x="${padding.left - 8}" y="${height - padding.bottom}" fill="var(--text-tertiary)" font-size="11" text-anchor="end">₹${Math.round(minVal).toLocaleString()}</text>
-            <text x="${padding.left}" y="${height - 8}" fill="var(--text-tertiary)" font-size="11">Start</text>
-            <text x="${width - padding.right}" y="${height - 8}" fill="var(--text-tertiary)" font-size="11" text-anchor="end">End (${curve.length} bars)</text>
+            <text x="${padding.left - 8}" y="${padding.top + 10}" fill="${axisTextColor}" font-size="11" font-family="var(--font-mono)" text-anchor="end">₹${Math.round(maxVal).toLocaleString()}</text>
+            <text x="${padding.left - 8}" y="${height - padding.bottom}" fill="${axisTextColor}" font-size="11" font-family="var(--font-mono)" text-anchor="end">₹${Math.round(minVal).toLocaleString()}</text>
+            <text x="${padding.left}" y="${height - 8}" fill="${axisTextColor}" font-size="11">Start</text>
+            <text x="${width - padding.right}" y="${height - 8}" fill="${axisTextColor}" font-size="11" text-anchor="end">End (${curve.length} bars)</text>
         </svg>
     `;
 }
@@ -941,16 +984,16 @@ function renderTradeLogTable(trades) {
         const retSign = t.return_pct > 0 ? '+' : '';
 
         tr.innerHTML = `
-            <td><strong style="color:var(--text-primary);">${t.symbol}</strong></td>
-            <td><span class="badge ${t.direction === 'BUY' ? 'badge-primary' : 'badge-danger'}">${t.direction}</span></td>
-            <td>${t.entry_date}</td>
-            <td style="font-family:var(--font-mono);">₹${t.entry_price.toFixed(2)}</td>
-            <td>${t.exit_date}</td>
-            <td style="font-family:var(--font-mono);">₹${t.exit_price.toFixed(2)}</td>
-            <td class="${isWin ? 'text-buy' : 'text-danger'}" style="font-family:var(--font-mono); font-weight:600;">${retSign}${t.return_pct.toFixed(2)}%</td>
-            <td class="${isWin ? 'text-buy' : 'text-danger'}" style="font-family:var(--font-mono);">₹${t.pnl.toLocaleString()}</td>
-            <td><span class="text-xs text-muted">${escapeHtml(t.exit_reason || '')}</span></td>
-            <td><span class="badge">${t.holding_bars}b</span></td>
+            <td><strong style="font-family:var(--font-display); font-weight:800; font-size:0.95rem;">${t.symbol}</strong></td>
+            <td><span class="signal-badge ${t.direction === 'BUY' ? 'signal-buy' : 'signal-sell'}">${t.direction}</span></td>
+            <td class="mono">${t.entry_date}</td>
+            <td class="mono">₹${t.entry_price.toFixed(2)}</td>
+            <td class="mono">${t.exit_date}</td>
+            <td class="mono">₹${t.exit_price.toFixed(2)}</td>
+            <td class="mono ${isWin ? 'text-buy' : 'text-danger'}" style="font-weight:700;">${retSign}${t.return_pct.toFixed(2)}%</td>
+            <td class="mono ${isWin ? 'text-buy' : 'text-danger'}" style="font-weight:700;">₹${t.pnl.toLocaleString()}</td>
+            <td><span class="mono" style="font-size:0.7rem; color:var(--ink-muted);">${escapeHtml(t.exit_reason || '')}</span></td>
+            <td><span class="signal-badge" style="background:var(--bg); border:1.5px solid var(--ink); padding:2px 6px;">${t.holding_bars}b</span></td>
         `;
         tbody.appendChild(tr);
     });

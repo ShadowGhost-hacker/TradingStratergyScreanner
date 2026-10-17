@@ -72,7 +72,7 @@ function renderTradingViewActiveWidget() {
             "theme": isDark ? "dark" : "light",
             "style": "1",
             "locale": "en",
-            "toolbar_bg": isDark ? "#0b0f19" : "#ffffff",
+            "toolbar_bg": isDark ? "#132019" : "#FFFFFF",
             "enable_publishing": false,
             "allow_symbol_change": true,
             "container_id": "tradingview_active_chart",
@@ -135,34 +135,34 @@ async function renderLightweightSignalChart() {
             width: container.clientWidth,
             height: container.clientHeight,
             layout: {
-                background: { type: 'solid', color: isDark ? '#0b0f19' : '#ffffff' },
-                textColor: isDark ? '#8b95a8' : '#4a5568',
-                fontFamily: "'Inter', sans-serif",
+                background: { type: 'solid', color: isDark ? '#141619' : '#FFFFFF' },
+                textColor: isDark ? '#FFFFFF' : '#0A0A0A',
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 12,
             },
             grid: {
-                vertLines: { color: isDark ? '#1a202c' : '#f0f2f5' },
-                horzLines: { color: isDark ? '#1a202c' : '#f0f2f5' },
+                vertLines: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,10,10,0.08)' },
+                horzLines: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,10,10,0.08)' },
             },
             crosshair: {
                 mode: LightweightCharts.CrosshairMode.Normal,
                 vertLine: {
                     width: 1,
-                    color: isDark ? 'rgba(0, 245, 155, 0.3)' : 'rgba(5, 150, 105, 0.3)',
+                    color: '#32CD32',
                     style: LightweightCharts.LineStyle.Dashed,
                 },
                 horzLine: {
                     width: 1,
-                    color: isDark ? 'rgba(0, 245, 155, 0.3)' : 'rgba(5, 150, 105, 0.3)',
+                    color: '#32CD32',
                     style: LightweightCharts.LineStyle.Dashed,
                 },
             },
             rightPriceScale: {
-                borderColor: isDark ? '#2a3142' : '#e0e4ea',
+                borderColor: isDark ? '#FFFFFF' : '#0A0A0A',
                 scaleMargins: { top: 0.05, bottom: 0.25 },
             },
             timeScale: {
-                borderColor: isDark ? '#2a3142' : '#e0e4ea',
+                borderColor: isDark ? '#FFFFFF' : '#0A0A0A',
                 timeVisible: true,
                 secondsVisible: false,
             },
@@ -171,12 +171,12 @@ async function renderLightweightSignalChart() {
         });
 
         candleSeries = chartInstance.addCandlestickSeries({
-            upColor: isDark ? '#00f59b' : '#059669',
-            downColor: isDark ? '#ff3b57' : '#dc2626',
-            borderUpColor: isDark ? '#00f59b' : '#059669',
-            borderDownColor: isDark ? '#ff3b57' : '#dc2626',
-            wickUpColor: isDark ? '#00f59b' : '#059669',
-            wickDownColor: isDark ? '#ff3b57' : '#dc2626',
+            upColor: '#32CD32',
+            downColor: '#FF4444',
+            borderUpColor: isDark ? '#32CD32' : '#0A0A0A',
+            borderDownColor: isDark ? '#FF4444' : '#0A0A0A',
+            wickUpColor: '#32CD32',
+            wickDownColor: '#FF4444',
         });
         candleSeries.setData(chartData.candles);
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,11 @@
     <meta property="og:title" content="Trading Strategy Screener &amp; Backtester">
     <meta property="og:description" content="Scan Indian Stock Market (NSE &amp; BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
     <title>Trading Strategy Screener &amp; Backtester</title>
+
+    <!-- Google Fonts for Variation 23 Neo-Brutalist Theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="/static/css/style.css">
@@ -47,9 +52,9 @@
         <!-- Top Navigation Bar -->
         <!-- ================================================================ -->
         <nav class="navbar">
-            <div class="navbar-brand">
-                <span class="brand-icon">📈</span>
-                <span class="brand-title">StrategyScreener <span class="brand-subtitle">& Backtester</span></span>
+            <div class="navbar-brand" onclick="switchMainView('screener')">
+                <div class="brand-icon">📈</div>
+                <span class="brand-title">Screener <span class="brand-subtitle">v.1.0</span></span>
             </div>
 
             <!-- View Switcher (Screener vs Backtest Simulator) -->
@@ -65,20 +70,20 @@
             <!-- Header Actions -->
             <div class="navbar-actions">
                 <!-- Cloud Sync Status -->
-                <button class="btn btn-ghost btn-sm" id="cloudSyncBtn" onclick="openCloudModal()" title="Free Cloud Storage & Backup">
-                    ☁️ <span id="cloudStatusLabel">Cloud Storage</span>
+                <button class="btn btn-ghost btn-sm mono" id="cloudSyncBtn" onclick="openCloudModal()" title="Free Cloud Storage & Backup" style="font-weight:700;">
+                    ☁️ <span id="cloudStatusLabel">Cloud.Synced</span>
                 </button>
 
                 <!-- Theme Toggle -->
                 <div style="display:flex; align-items:center; gap:6px; margin: 0 4px;">
-                    <span class="theme-toggle-label">☀️</span>
+                    <span class="theme-toggle-label mono">☀️</span>
                     <div class="theme-toggle" id="themeToggle" title="Toggle Light/Dark Theme"></div>
-                    <span class="theme-toggle-label">🌙</span>
+                    <span class="theme-toggle-label mono">🌙</span>
                 </div>
 
                 <!-- User Auth Profile -->
                 <div class="user-auth-wrapper">
-                    <button class="btn btn-sm btn-primary" id="userAuthBtn" onclick="openAuthModal()">
+                    <button class="btn btn-scan" id="userAuthBtn" onclick="openAuthModal()" style="padding: 8px 18px; font-size: 0.75rem; box-shadow: 3px 3px 0 var(--ink); border: 2px solid var(--ink);">
                         👤 Sign In
                     </button>
                     <!-- User Dropdown (when logged in) -->
@@ -113,8 +118,8 @@
                 <!-- Strategies Section -->
                 <div class="panel-section">
                     <div class="panel-section-header">
-                        <span class="panel-section-title">📋 Trading Strategies</span>
-                        <div style="display:flex; gap:4px;">
+                        <span class="panel-section-title">01 Strategies</span>
+                        <div style="display:flex; gap:6px;">
                             <button class="btn btn-sm btn-secondary" id="uploadStrategyBtn" title="Upload strategy .py file">📁 Upload</button>
                             <button class="btn btn-sm btn-primary" id="newStrategyBtn">+ New</button>
                         </div>
@@ -131,7 +136,7 @@
                 <!-- Screener Configuration Section (Visible on Screener View) -->
                 <div class="panel-section" id="screenerConfigSection">
                     <div class="panel-section-header">
-                        <span class="panel-section-title">🔍 Scan Universe (Multi-Select)</span>
+                        <span class="panel-section-title">02 Scan Config</span>
                         <div style="display:flex; gap:4px;">
                             <button class="btn btn-xs btn-ghost" onclick="selectAllUniverses(true)">Select All</button>
                             <button class="btn btn-xs btn-ghost" onclick="selectAllUniverses(false)">Clear</button>
@@ -177,7 +182,7 @@
                     <!-- Start Scan Button -->
                     <div style="margin-top:16px;">
                         <button class="btn btn-scan" id="scanBtn">
-                            🚀 Start Market Scan
+                            Execute Scan 🚀
                         </button>
                     </div>
 
@@ -200,7 +205,7 @@
                 <!-- Backtest Controls Sidebar Section (Visible on Backtest View) -->
                 <div class="panel-section hidden" id="backtestSidebarSection">
                     <div class="panel-section-header">
-                        <span class="panel-section-title">🧪 Backtest Settings</span>
+                        <span class="panel-section-title">03 Backtest Parameters</span>
                     </div>
 
                     <div class="form-group">
@@ -263,19 +268,44 @@
 
                 <!-- 1. Market Screener Results View -->
                 <div id="resultsView">
-                    <!-- Toolbar -->
-                    <div class="results-toolbar">
-                        <span class="results-count" id="resultsCount">
-                            Select strategies and universes to scan
-                        </span>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div class="results-filters">
-                                <button class="filter-chip active" data-filter="all">All</button>
-                                <button class="filter-chip buy" data-filter="buy">🟢 BUY</button>
-                                <button class="filter-chip sell" data-filter="sell">🔴 SELL</button>
-                            </div>
-                            <button class="btn btn-sm btn-secondary" id="exportBtn" title="Export to CSV">📥 Export CSV</button>
+                    <!-- Results Header Banner (Variation 23) -->
+                    <div class="results-header-banner">
+                        <div>
+                            <span class="mono" style="color: var(--accent); font-weight: 800; font-size: 0.8rem; background: var(--ink); padding: 4px 10px; display:inline-block;">[ Market Report ]</span>
+                            <h2 class="results-header-title">Opportunities</h2>
                         </div>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <div class="nav-view-switcher" style="border: 2px solid var(--ink); padding: 3px;">
+                                <button class="nav-tab filter-chip active" data-filter="all" style="box-shadow:none; border:none">All</button>
+                                <button class="nav-tab filter-chip buy" data-filter="buy" style="box-shadow:none; border:none">🟢 Buy</button>
+                                <button class="nav-tab filter-chip sell" data-filter="sell" style="box-shadow:none; border:none">🔴 Sell</button>
+                            </div>
+                            <button class="btn btn-secondary" id="exportBtn" title="Export to CSV">📥 Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Summary Strip (Variation 23) -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <span class="kpi-title">Active Signals</span>
+                            <div class="kpi-value" id="kpiActiveSignals">0</div>
+                            <span class="strategy-desc" id="kpiActiveDesc">Confirmed cross-strategy</span>
+                        </div>
+                        <div class="kpi-card accent-card" id="kpiSentimentCard">
+                            <span class="kpi-title">Bias.Sentiment</span>
+                            <div class="kpi-value" id="kpiSentimentValue">READY</div>
+                            <span class="strategy-desc" id="kpiSentimentDesc">Awaiting market scan</span>
+                        </div>
+                        <div class="kpi-card">
+                            <span class="kpi-title">Market.Scope</span>
+                            <div class="kpi-value" id="kpiScopeValue" style="font-size: 2.2rem;">NSE / BSE</div>
+                            <span class="strategy-desc" id="kpiScopeDesc">Indian Equities Terminal</span>
+                        </div>
+                    </div>
+
+                    <!-- Results Count Indicator -->
+                    <div style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="mono" id="resultsCount" style="font-weight:700;">Select strategies and universes to scan</span>
                     </div>
 
                     <!-- Results Table -->
@@ -285,11 +315,11 @@
                                 <tr>
                                     <th>Ticker</th>
                                     <th>Exchange</th>
-                                    <th>Price</th>
-                                    <th>Change</th>
-                                    <th>Signal</th>
-                                    <th>Aligned Strategies</th>
-                                    <th>Actions</th>
+                                    <th>Current Price</th>
+                                    <th>Change %</th>
+                                    <th>Signal Type</th>
+                                    <th>Logic Matrix</th>
+                                    <th>Interaction</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsTableBody">
@@ -300,7 +330,7 @@
                                             <div class="empty-state-title">Ready to Scan the Indian Stock Market</div>
                                             <div class="empty-state-desc">
                                                 Select one or more strategies, choose stock universes (like Nifty 50, All NSE Stocks, All BSE Stocks), and click
-                                                <strong>Start Market Scan</strong> to find matching opportunities.
+                                                <strong>Execute Scan 🚀</strong> to find matching opportunities.
                                             </div>
                                         </div>
                                     </td>
