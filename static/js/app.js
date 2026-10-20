@@ -21,9 +21,11 @@ const AppState = {
     selectedStrategies: new Set(),
     universes: [],
     selectedUniverses: new Set(['nifty50']),
+    universeRegion: 'All',
     scanResults: [],
+    hasScanned: false,
     activeScanInterval: null,
-    currentView: 'screener',    // 'screener' | 'backtest' | 'chart'
+    currentView: 'screener',    // 'screener' | 'watchlist' | 'backtest' | 'chart'
     currentFilter: 'all',        // 'all' | 'buy' | 'sell'
     chartSymbol: null,
     chartExchange: null,
@@ -32,7 +34,17 @@ const AppState = {
     authToken: localStorage.getItem('auth_token') || '',
     backtestResult: null,
     activeBacktestInterval: null,
-    pendingAuthEmail: ''
+    pendingAuthEmail: '',
+    // Exchange Watchlist state
+    currentWatchlist: 'all_nyse',
+    watchlistPage: 1,
+    watchlistLimit: 50,
+    watchlistSearch: '',
+    watchlistSort: 'symbol_asc',
+    watchlistFilter: 'all',
+    starredSymbols: new Set(JSON.parse(localStorage.getItem('palgoryx_starred_symbols') || '[]')),
+    watchlistsOverview: [],
+    watchlistData: null,
 };
 
 // ============================================================================
@@ -47,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTimeframes();
     loadSettings();
     setupEventListeners();
+    loadInitialScanResults();
 });
 
 function setupEventListeners() {
@@ -75,9 +88,19 @@ function setupEventListeners() {
         });
     });
 
-    // Back to results from chart view
+    // Back to previous view from chart view
     document.getElementById('backToResults').addEventListener('click', () => {
-        switchMainView('screener');
+        switchMainView(AppState.previousView || 'screener');
+    });
+
+    // Sync sidebar timeframe select with chart
+    document.getElementById('timeframeSelect')?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const chartTf = document.getElementById('chartTimeframeSelect');
+        if (chartTf && chartTf.value !== val) chartTf.value = val;
+        if (typeof changeChartTimeframe === 'function' && AppState.currentView === 'chart') {
+            changeChartTimeframe(val);
+        }
     });
 
     // Strategy modal buttons
@@ -93,6 +116,31 @@ function setupEventListeners() {
     // Export button
     document.getElementById('exportBtn').addEventListener('click', exportResults);
 
+    // Left Panel Expand / Minimize Single Option (on the new rail bar column)
+    const railToggle = document.getElementById('railToggleBtn');
+    if (railToggle) {
+        railToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleLeftPanel();
+        });
+    }
+
+    // Keyboard shortcut Ctrl+B or Cmd+B to toggle left panel
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+            e.preventDefault();
+            toggleLeftPanel();
+        }
+    });
+
+    // Initialize panel state from localStorage
+    initLeftPanel();
+
+    // Paste event listener for strategy chat (paste chart screenshots directly with Ctrl+V)
+    document.addEventListener('paste', handlePasteOnChat);
+
     // Close user dropdown when clicking outside
     document.addEventListener('click', (e) => {
         const authWrapper = document.querySelector('.user-auth-wrapper');
@@ -101,6 +149,94 @@ function setupEventListeners() {
             dropdown.classList.add('hidden');
         }
     });
+}
+
+// ============================================================================
+// Left Sidebar Panel Expand / Minimize Management (Single Option on Left Rail)
+// ============================================================================
+
+let lastPanelToggleTime = 0;
+
+function initLeftPanel() {
+    const isCollapsed = localStorage.getItem('palgory_panel_collapsed') === 'true';
+    if (isCollapsed) {
+        toggleLeftPanel(true);
+    }
+}
+
+function toggleLeftPanel(forceState) {
+    // Debounce guard to prevent rapid double-toggling
+    const now = Date.now();
+    if (forceState === undefined && now - lastPanelToggleTime < 220) {
+        return;
+    }
+    lastPanelToggleTime = now;
+
+    const mainContent = document.getElementById('mainContent');
+    const panelLeft = document.getElementById('panelLeft');
+    const railToggle = document.getElementById('railToggleBtn');
+    const railArrow = document.getElementById('railToggleArrow');
+    const railTooltip = document.getElementById('railToggleTooltip');
+
+    if (!mainContent || !panelLeft) return;
+
+    const shouldCollapse = forceState !== undefined ? forceState : !mainContent.classList.contains('sidebar-collapsed');
+
+    if (shouldCollapse) {
+        mainContent.classList.add('sidebar-collapsed');
+        if (railToggle) {
+            railToggle.classList.add('minimized');
+            railToggle.setAttribute('title', 'Expand Strategy Panel (Ctrl+B)');
+        }
+        if (railArrow) {
+            railArrow.setAttribute('d', 'M11 9l4 3-4 3');
+        }
+        if (railTooltip) {
+            railTooltip.textContent = 'Expand (Ctrl+B)';
+        }
+        localStorage.setItem('palgory_panel_collapsed', 'true');
+    } else {
+        mainContent.classList.remove('sidebar-collapsed');
+        if (railToggle) {
+            railToggle.classList.remove('minimized');
+            railToggle.setAttribute('title', 'Minimize Strategy Panel (Ctrl+B)');
+        }
+        if (railArrow) {
+            railArrow.setAttribute('d', 'M16 15l-3-3 3-3');
+        }
+        if (railTooltip) {
+            railTooltip.textContent = 'Minimize (Ctrl+B)';
+        }
+        localStorage.setItem('palgory_panel_collapsed', 'false');
+    }
+
+    // Trigger chart and table recalculation on resize
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+    }, 240);
+}
+
+// Quick navigation from rail icons: expand if collapsed and focus section
+function handleRailClick(targetId) {
+    const mainContent = document.getElementById('mainContent');
+    if (mainContent && mainContent.classList.contains('sidebar-collapsed')) {
+        toggleLeftPanel(false);
+    }
+
+    // Update active state on rail items
+    document.querySelectorAll('.rail-item-btn').forEach(b => b.classList.remove('active'));
+    if (targetId === 'strategyList') {
+        document.getElementById('railItemStrategies')?.classList.add('active');
+    } else if (targetId === 'screenerConfigSection') {
+        document.getElementById('railItemConfig')?.classList.add('active');
+    } else if (targetId === 'timeframeSelect') {
+        document.getElementById('railItemParams')?.classList.add('active');
+    }
+
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 }
 
 // ============================================================================
@@ -127,41 +263,64 @@ function toggleTheme() {
 }
 
 // ============================================================================
-// View Switcher (Screener vs Backtest vs Chart)
+// View Switcher (Screener vs Watchlist vs Backtest vs Chart)
 // ============================================================================
 
 function switchMainView(viewName) {
     AppState.currentView = viewName;
 
     const tabScreener = document.getElementById('tabScreener');
+    const tabWatchlist = document.getElementById('tabWatchlist');
     const tabBacktest = document.getElementById('tabBacktest');
+
     const resultsView = document.getElementById('resultsView');
     const backtestView = document.getElementById('backtestView');
     const chartView = document.getElementById('chartView');
+    const watchlistView = document.getElementById('watchlistView');
 
     const screenerSidebar = document.getElementById('screenerConfigSection');
     const backtestSidebar = document.getElementById('backtestSidebarSection');
+    const watchlistSidebar = document.getElementById('watchlistSidebarSection');
 
     // Reset tabs
-    tabScreener.classList.toggle('active', viewName === 'screener');
-    tabBacktest.classList.toggle('active', viewName === 'backtest');
+    if (tabScreener) tabScreener.classList.toggle('active', viewName === 'screener');
+    if (tabWatchlist) tabWatchlist.classList.toggle('active', viewName === 'watchlist');
+    if (tabBacktest) tabBacktest.classList.toggle('active', viewName === 'backtest');
 
     if (viewName === 'screener') {
-        resultsView.classList.remove('hidden');
-        backtestView.classList.add('hidden');
-        chartView.classList.add('hidden');
-        screenerSidebar.classList.remove('hidden');
-        backtestSidebar.classList.add('hidden');
+        if (resultsView) resultsView.classList.remove('hidden');
+        if (backtestView) backtestView.classList.add('hidden');
+        if (chartView) chartView.classList.add('hidden');
+        if (watchlistView) watchlistView.classList.add('hidden');
+
+        if (screenerSidebar) screenerSidebar.classList.remove('hidden');
+        if (backtestSidebar) backtestSidebar.classList.add('hidden');
+        if (watchlistSidebar) watchlistSidebar.classList.add('hidden');
+    } else if (viewName === 'watchlist') {
+        if (resultsView) resultsView.classList.add('hidden');
+        if (backtestView) backtestView.classList.add('hidden');
+        if (chartView) chartView.classList.add('hidden');
+        if (watchlistView) watchlistView.classList.remove('hidden');
+
+        if (screenerSidebar) screenerSidebar.classList.add('hidden');
+        if (backtestSidebar) backtestSidebar.classList.add('hidden');
+        if (watchlistSidebar) watchlistSidebar.classList.remove('hidden');
+
+        initWatchlistView();
     } else if (viewName === 'backtest') {
-        resultsView.classList.add('hidden');
-        backtestView.classList.remove('hidden');
-        chartView.classList.add('hidden');
-        screenerSidebar.classList.add('hidden');
-        backtestSidebar.classList.remove('hidden');
+        if (resultsView) resultsView.classList.add('hidden');
+        if (backtestView) backtestView.classList.remove('hidden');
+        if (chartView) chartView.classList.add('hidden');
+        if (watchlistView) watchlistView.classList.add('hidden');
+
+        if (screenerSidebar) screenerSidebar.classList.add('hidden');
+        if (backtestSidebar) backtestSidebar.classList.remove('hidden');
+        if (watchlistSidebar) watchlistSidebar.classList.add('hidden');
     } else if (viewName === 'chart') {
-        resultsView.classList.add('hidden');
-        backtestView.classList.add('hidden');
-        chartView.classList.remove('hidden');
+        if (resultsView) resultsView.classList.add('hidden');
+        if (backtestView) backtestView.classList.add('hidden');
+        if (chartView) chartView.classList.remove('hidden');
+        if (watchlistView) watchlistView.classList.add('hidden');
     }
 }
 
@@ -174,10 +333,44 @@ async function loadUniverses() {
         const res = await fetch('/api/universes');
         const data = await res.json();
         AppState.universes = data.universes;
+        renderUniverseCategoryTabs();
         renderUniverseMultiSelect();
     } catch (err) {
         console.error('Failed to load universes:', err);
     }
+}
+
+function renderUniverseCategoryTabs() {
+    const tabsContainer = document.getElementById('universeCategoryTabs');
+    if (!tabsContainer) return;
+
+    tabsContainer.innerHTML = '';
+
+    const categories = [
+        { id: 'All', label: '🌐 All' },
+        { id: 'US', label: '🇺🇸 US' },
+        { id: 'China / HK', label: '🇨🇳 China / HK' },
+        { id: 'Japan', label: '🇯🇵 Japan' },
+        { id: 'UK', label: '🇬🇧 UK' },
+        { id: 'Canada', label: '🇨🇦 Canada' },
+        { id: 'Germany', label: '🇩🇪 Germany' },
+        { id: 'Australia', label: '🇦🇺 Australia' },
+        { id: 'India', label: '🇮🇳 India' },
+        { id: 'Commodities', label: '⚡ Commodities' },
+    ];
+
+    categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `universe-cat-btn ${AppState.universeRegion === cat.id ? 'active' : ''}`;
+        btn.textContent = cat.label;
+        btn.addEventListener('click', () => {
+            AppState.universeRegion = cat.id;
+            renderUniverseCategoryTabs();
+            renderUniverseMultiSelect();
+        });
+        tabsContainer.appendChild(btn);
+    });
 }
 
 function renderUniverseMultiSelect() {
@@ -186,20 +379,46 @@ function renderUniverseMultiSelect() {
 
     wrapper.innerHTML = '';
 
-    AppState.universes.forEach(u => {
+    const badgeClassMap = {
+        'BSE': 'badge-danger',
+        'MCX': 'badge-warning',
+        'NCDEX': 'badge-info',
+        'COMMODITY': 'badge-warning',
+        'NYSE': 'badge-nyse',
+        'NASDAQ': 'badge-nasdaq',
+        'US': 'badge-us',
+        'SSE': 'badge-sse',
+        'SZSE': 'badge-szse',
+        'BSE_BJ': 'badge-bj',
+        'HKSE': 'badge-hkse',
+        'TSE': 'badge-tse',
+        'LSE': 'badge-lse',
+        'TSX': 'badge-tsx',
+        'FSE': 'badge-fse',
+        'ASX': 'badge-asx'
+    };
+
+    const filteredUniverses = AppState.universes.filter(u => {
+        if (AppState.universeRegion === 'All') return true;
+        if (u.key === 'custom') return true;
+        return u.category === AppState.universeRegion;
+    });
+
+    filteredUniverses.forEach(u => {
         const item = document.createElement('div');
         const isSelected = AppState.selectedUniverses.has(u.key);
         item.className = `universe-item ${isSelected ? 'selected' : ''}`;
         item.dataset.key = u.key;
 
-        const countLabel = u.count > 0 ? ` (${u.count})` : '';
+        const countLabel = u.count > 0 ? ` (${u.count.toLocaleString()})` : '';
+        const badgeClass = badgeClassMap[u.exchange] || 'badge-primary';
 
         item.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" class="universe-checkbox" ${isSelected ? 'checked' : ''}>
                 <span>${u.name}${countLabel}</span>
             </div>
-            <span class="badge ${u.exchange === 'BSE' ? 'badge-danger' : 'badge-primary'}">${u.exchange}</span>
+            <span class="badge ${badgeClass}">${u.exchange}</span>
         `;
 
         item.addEventListener('click', (e) => {
@@ -237,11 +456,18 @@ function toggleUniverseSelection(universeKey, isSelected) {
 }
 
 function selectAllUniverses(selectAll) {
+    const targetUniverses = AppState.universes.filter(u => {
+        if (AppState.universeRegion === 'All') return true;
+        return u.category === AppState.universeRegion;
+    });
+
     if (selectAll) {
-        AppState.universes.forEach(u => AppState.selectedUniverses.add(u.key));
+        targetUniverses.forEach(u => AppState.selectedUniverses.add(u.key));
     } else {
-        AppState.selectedUniverses.clear();
-        AppState.selectedUniverses.add('nifty50'); // Keep default
+        targetUniverses.forEach(u => AppState.selectedUniverses.delete(u.key));
+        if (AppState.selectedUniverses.size === 0) {
+            AppState.selectedUniverses.add('nifty50');
+        }
     }
     renderUniverseMultiSelect();
 }
@@ -258,14 +484,47 @@ async function loadTimeframes() {
         const res = await fetch('/api/timeframes');
         const data = await res.json();
         const select = document.getElementById('timeframeSelect');
-        select.innerHTML = '';
+        const chartSelect = document.getElementById('chartTimeframeSelect');
+        if (select) select.innerHTML = '';
+        if (chartSelect) chartSelect.innerHTML = '';
+
+        const groups = {};
+        const groupOrder = ['Seconds', 'Minutes', 'Hours', 'Days', 'Weeks', 'Months'];
+        const groupEmoji = {
+            'Seconds': '⏱️ Seconds',
+            'Minutes': '⏱️ Minutes',
+            'Hours': '🕒 Hours',
+            'Days': '📅 Daily',
+            'Weeks': '📅 Weekly',
+            'Months': '📆 Months'
+        };
+
         data.timeframes.forEach(tf => {
-            const opt = document.createElement('option');
-            opt.value = tf.key;
-            opt.textContent = tf.label;
-            if (tf.key === '1d') opt.selected = true;
-            select.appendChild(opt);
+            const grp = tf.group || 'Other';
+            if (!groups[grp]) groups[grp] = [];
+            groups[grp].push(tf);
         });
+
+        const populateSelect = (targetSelect) => {
+            if (!targetSelect) return;
+            groupOrder.forEach(grpName => {
+                if (groups[grpName] && groups[grpName].length > 0) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = groupEmoji[grpName] || grpName;
+                    groups[grpName].forEach(tf => {
+                        const opt = document.createElement('option');
+                        opt.value = tf.key;
+                        opt.textContent = tf.label;
+                        if (tf.key === '1d') opt.selected = true;
+                        optgroup.appendChild(opt);
+                    });
+                    targetSelect.appendChild(optgroup);
+                }
+            });
+        };
+
+        populateSelect(select);
+        populateSelect(chartSelect);
     } catch (err) {
         console.error('Failed to load timeframes:', err);
     }
@@ -341,8 +600,481 @@ function toggleStrategy(id) {
 }
 
 // ============================================================================
-// Strategy Editor Modal (No Reliance Test Button)
+// Strategy Creator Studio & AI Quant Chatbot
 // ============================================================================
+
+const StrategyChatState = {
+    messages: [], // Array of { role: 'user' | 'model', content: string, attachments?: [...], strategyCode?: string, strategyId?: string, strategyName?: string }
+    currentAttachments: [], // Array of { name, mimeType, data, previewUrl, size }
+    isSending: false
+};
+
+function switchEditorTab(tab) {
+    const tabChat = document.getElementById('modalTabChat');
+    const tabCode = document.getElementById('modalTabCode');
+    const viewChat = document.getElementById('editorChatView');
+    const viewCode = document.getElementById('editorCodeView');
+
+    if (tab === 'chat') {
+        if (tabChat) tabChat.classList.add('active');
+        if (tabCode) tabCode.classList.remove('active');
+        if (viewChat) viewChat.classList.remove('hidden');
+        if (viewCode) viewCode.classList.add('hidden');
+        initStrategyChat();
+        setTimeout(() => {
+            document.getElementById('chatInputText')?.focus();
+        }, 50);
+    } else {
+        if (tabChat) tabChat.classList.remove('active');
+        if (tabCode) tabCode.classList.add('active');
+        if (viewChat) viewChat.classList.add('hidden');
+        if (viewCode) viewCode.classList.remove('hidden');
+        setTimeout(() => {
+            document.getElementById('codeEditor')?.focus();
+        }, 50);
+    }
+}
+
+function initStrategyChat() {
+    if (StrategyChatState.messages.length === 0) {
+        StrategyChatState.messages.push({
+            role: 'model',
+            content: `👋 **Welcome to the Palgoryx Quantitative Strategy Studio!**
+
+I am your **Chief Quantitative Strategist & Algorithmic Architect**. I will work directly with you to discuss, refine, and stress-test your trading setups so there are **zero execution flaws** in live market scanning or backtesting.
+
+### How We Collaborate:
+1. **Discuss your trading thesis**: Tell me your setup in your own words, mention your indicators (e.g. EMAs, Supertrend, RSI, MACD, Volume), or attach/paste chart screenshots (**Ctrl+V**).
+2. **Eliminate Blindspots**: I will analyze your setup, point out potential lag or whipsaws in consolidation, and ask you sharp clarifying questions to lock down exact entry triggers, regime filters, and risk rules.
+3. **Generate Code on Command**: I will NOT overwhelm you with code until you are completely ready. Whenever you want the production script, simply tell me: **"Generate Python code"** or **"Build the strategy"**!
+
+What trading edge or market setup are we designing today?`,
+            strategyCode: null
+        });
+    }
+    renderStrategyChat();
+}
+
+function clearStrategyChat() {
+    StrategyChatState.messages = [];
+    StrategyChatState.currentAttachments = [];
+    renderAttachmentTray();
+    initStrategyChat();
+    showToast('Strategy chat cleared', 'info');
+}
+
+function renderStrategyChat() {
+    const thread = document.getElementById('strategyChatThread');
+    if (!thread) return;
+
+    thread.innerHTML = '';
+
+    StrategyChatState.messages.forEach((msg, idx) => {
+        const isUser = msg.role === 'user';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${isUser ? 'user' : 'bot'}`;
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'chat-msg-header';
+        headerDiv.innerHTML = isUser ? '<span>👤 Trader (You)</span>' : '<span>⚡ Palgoryx Chief Quant AI</span>';
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'chat-msg-bubble';
+
+        // Render any attachments for this message
+        if (msg.attachments && msg.attachments.length > 0) {
+            const attContainer = document.createElement('div');
+            attContainer.className = 'chat-attachment-tray';
+            attContainer.style.marginBottom = '8px';
+
+            msg.attachments.forEach(att => {
+                const pill = document.createElement('div');
+                pill.className = 'chat-attachment-pill';
+                if (att.mimeType && att.mimeType.startsWith('image/')) {
+                    pill.innerHTML = `<img src="data:${att.mimeType};base64,${att.data}" class="chat-attachment-thumb"> <span>${escapeHtml(att.name || 'Image')}</span>`;
+                } else {
+                    pill.innerHTML = `<span>📄</span> <span>${escapeHtml(att.name || 'File')}</span>`;
+                }
+                attContainer.appendChild(pill);
+            });
+            bubbleDiv.appendChild(attContainer);
+        }
+
+        // Format and render message content
+        const textContent = msg.content || '';
+        let strategyCodeBlock = msg.strategyCode || '';
+        let strategyId = msg.strategyId || '';
+        let strategyName = msg.strategyName || '';
+
+        // Check if text has code block
+        if (!strategyCodeBlock && textContent.includes('```python')) {
+            const parts = textContent.split('```python');
+            const codePart = parts[1].split('```')[0].trim();
+            if (codePart.includes('def calculate_signals') || codePart.includes('def evaluate')) {
+                strategyCodeBlock = codePart;
+            }
+        }
+
+        // Parse text parts outside code block
+        let formattedHtml = '';
+        if (strategyCodeBlock && textContent.includes('```python')) {
+            const beforeCode = textContent.split('```python')[0];
+            const afterCode = textContent.split('```python')[1].split('```')[1] || '';
+            formattedHtml = formatMarkdownChat(beforeCode);
+            if (afterCode.trim()) {
+                formattedHtml += '<br>' + formatMarkdownChat(afterCode);
+            }
+        } else {
+            formattedHtml = formatMarkdownChat(textContent);
+        }
+
+        const textWrapper = document.createElement('div');
+        textWrapper.innerHTML = formattedHtml;
+        bubbleDiv.appendChild(textWrapper);
+
+        // If this is the latest bot message and it's a discussion message (no code yet), render quick actionable chips
+        if (!isUser && !strategyCodeBlock && idx === StrategyChatState.messages.length - 1) {
+            const actionChipsDiv = document.createElement('div');
+            actionChipsDiv.className = 'chat-quick-replies';
+            actionChipsDiv.style.cssText = 'margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; padding-top:8px; border-top:1px dashed var(--border);';
+            actionChipsDiv.innerHTML = `
+                <button class="btn btn-xs btn-primary" onclick="sendQuickPrompt('Looks great! Please generate the complete, verified Python strategy code now.')" title="Instruct AI to generate the full Python code immediately">
+                    🚀 Ready! Generate Python Code
+                </button>
+                <button class="btn btn-xs btn-secondary" onclick="sendQuickPrompt('Let\'s add a 200 EMA trend filter and 1.5x ATR stop loss to eliminate whipsaws.')" title="Add trend filter and stop-loss">
+                    🛡️ Add 200 EMA & ATR Stop Loss
+                </button>
+                <button class="btn btn-xs btn-secondary" onclick="sendQuickPrompt('This strategy is for 5-minute intraday scalping. How should we adapt the parameters?')" title="Optimize for 5m scalping">
+                    ⏱️ 5m Intraday Setup
+                </button>
+                <button class="btn btn-xs btn-ghost" onclick="sendQuickPrompt('For exits, let\'s close positions when the opposite signal triggers, with a 2% max stop loss.')" title="Set exit on opposite signal">
+                    🔄 Exit on Opposite Signal
+                </button>
+            `;
+            bubbleDiv.appendChild(actionChipsDiv);
+        }
+
+        // Render Strategy Card if code exists
+        if (strategyCodeBlock) {
+            if (!strategyId) {
+                const idMatch = strategyCodeBlock.match(/STRATEGY_ID\s*=\s*["']([^"']+)["']/) || strategyCodeBlock.match(/#\s*STRATEGY_ID:\s*([a-z0-9_]+)/i);
+                strategyId = idMatch ? idMatch[1].trim() : 'ai_strategy_' + (idx + 1);
+            }
+            if (!strategyName) {
+                const nameMatch = strategyCodeBlock.match(/STRATEGY_NAME\s*=\s*["']([^"']+)["']/) || strategyCodeBlock.match(/#\s*STRATEGY_NAME:\s*([^\n]+)/);
+                strategyName = nameMatch ? nameMatch[1].trim() : 'AI Quant Strategy';
+            }
+
+            const card = document.createElement('div');
+            card.className = 'chat-strategy-card';
+            card.innerHTML = `
+                <div class="chat-strategy-card-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">⚡</span>
+                        <strong class="chat-strategy-card-title">${escapeHtml(strategyName)}</strong>
+                        <span class="mono text-xs text-muted">[ID: ${escapeHtml(strategyId)}]</span>
+                    </div>
+                    <span class="ai-badge" style="font-size:0.65rem;">Verified Python</span>
+                </div>
+                <pre style="max-height:220px; overflow-y:auto;"><code>${escapeHtml(strategyCodeBlock)}</code></pre>
+                <div class="chat-strategy-actions">
+                    <button class="btn btn-sm btn-primary" id="btnApplyStrat_${idx}">
+                        🚀 Add Strategy to Scanner & Run
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="btnEditStrat_${idx}">
+                        📝 Edit in Studio
+                    </button>
+                    <button class="btn btn-sm btn-ghost" id="btnCopyStrat_${idx}">
+                        📋 Copy Code
+                    </button>
+                </div>
+            `;
+
+            bubbleDiv.appendChild(card);
+
+            // Bind click listeners safely
+            setTimeout(() => {
+                document.getElementById(`btnApplyStrat_${idx}`)?.addEventListener('click', () => {
+                    applyAndSaveStrategyFromChat(strategyId, strategyCodeBlock, strategyName);
+                });
+                document.getElementById(`btnEditStrat_${idx}`)?.addEventListener('click', () => {
+                    loadStrategyIntoCodeEditor(strategyId, strategyCodeBlock);
+                });
+                document.getElementById(`btnCopyStrat_${idx}`)?.addEventListener('click', () => {
+                    copyStrategyCodeToClipboard(strategyCodeBlock);
+                });
+            }, 0);
+        }
+
+        msgDiv.appendChild(headerDiv);
+        msgDiv.appendChild(bubbleDiv);
+        thread.appendChild(msgDiv);
+    });
+
+    thread.scrollTop = thread.scrollHeight;
+}
+
+function formatMarkdownChat(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    html = html.replace(/^### (.*$)/gm, '<h4 style="margin:6px 0 2px; font-weight:800;">$1</h4>');
+    html = html.replace(/^## (.*$)/gm, '<h3 style="margin:8px 0 4px; font-weight:800;">$1</h3>');
+    html = html.replace(/^\s*[-•]\s+(.*)$/gm, '<li>$1</li>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function handleChatInputKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendStrategyChatMessage();
+    }
+}
+
+function sendQuickPrompt(promptText) {
+    const input = document.getElementById('chatInputText');
+    if (input) {
+        input.value = promptText;
+        sendStrategyChatMessage();
+    }
+}
+
+function handleChatFilesSelected(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (loadEvt) => {
+            const base64Data = loadEvt.target.result.split(',')[1];
+            StrategyChatState.currentAttachments.push({
+                name: file.name,
+                mimeType: file.type || 'application/octet-stream',
+                data: base64Data,
+                size: (file.size / 1024).toFixed(1) + ' KB'
+            });
+            renderAttachmentTray();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    e.target.value = '';
+}
+
+function handlePasteOnChat(e) {
+    const modal = document.getElementById('editorModal');
+    if (!modal || !modal.classList.contains('active')) return;
+    const chatTab = document.getElementById('modalTabChat');
+    if (!chatTab || !chatTab.classList.contains('active')) return;
+
+    const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            const reader = new FileReader();
+            reader.onload = (loadEvt) => {
+                const base64Data = loadEvt.target.result.split(',')[1];
+                StrategyChatState.currentAttachments.push({
+                    name: `Pasted_Chart_${new Date().toISOString().slice(11, 19).replace(/:/g, '-')}.png`,
+                    mimeType: blob.type || 'image/png',
+                    data: base64Data,
+                    size: (blob.size / 1024).toFixed(1) + ' KB'
+                });
+                renderAttachmentTray();
+                showToast('📸 Chart screenshot attached from clipboard!', 'info');
+            };
+            reader.readAsDataURL(blob);
+            break;
+        }
+    }
+}
+
+function renderAttachmentTray() {
+    const tray = document.getElementById('chatAttachmentTray');
+    if (!tray) return;
+
+    if (StrategyChatState.currentAttachments.length === 0) {
+        tray.classList.add('hidden');
+        tray.innerHTML = '';
+        return;
+    }
+
+    tray.classList.remove('hidden');
+    tray.innerHTML = '';
+
+    StrategyChatState.currentAttachments.forEach((att, idx) => {
+        const pill = document.createElement('div');
+        pill.className = 'chat-attachment-pill';
+
+        if (att.mimeType && att.mimeType.startsWith('image/')) {
+            pill.innerHTML = `
+                <img src="data:${att.mimeType};base64,${att.data}" class="chat-attachment-thumb">
+                <span>${escapeHtml(att.name)}</span>
+                <span class="text-xs text-muted">(${att.size})</span>
+                <button class="chat-attachment-remove" onclick="removeAttachment(${idx})">✕</button>
+            `;
+        } else {
+            pill.innerHTML = `
+                <span>📄</span>
+                <span>${escapeHtml(att.name)}</span>
+                <span class="text-xs text-muted">(${att.size})</span>
+                <button class="chat-attachment-remove" onclick="removeAttachment(${idx})">✕</button>
+            `;
+        }
+        tray.appendChild(pill);
+    });
+}
+
+function removeAttachment(idx) {
+    StrategyChatState.currentAttachments.splice(idx, 1);
+    renderAttachmentTray();
+}
+
+async function sendStrategyChatMessage() {
+    if (StrategyChatState.isSending) return;
+
+    const input = document.getElementById('chatInputText');
+    const sendBtn = document.getElementById('chatSendBtn');
+    const text = input ? input.value.trim() : '';
+    const attachments = [...StrategyChatState.currentAttachments];
+
+    if (!text && attachments.length === 0) {
+        showToast('Please type a message or attach a picture/file', 'warning');
+        return;
+    }
+
+    // Add user message to state
+    StrategyChatState.messages.push({
+        role: 'user',
+        content: text,
+        attachments: attachments
+    });
+
+    // Clear input & attachments
+    if (input) input.value = '';
+    StrategyChatState.currentAttachments = [];
+    renderAttachmentTray();
+    renderStrategyChat();
+
+    // Set sending state
+    StrategyChatState.isSending = true;
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<div class="spinner"></div> Thinking...';
+    }
+
+    try {
+        const payloadMessages = StrategyChatState.messages.map(m => ({
+            role: m.role,
+            content: m.content,
+            attachments: m.attachments?.map(a => ({
+                name: a.name,
+                mimeType: a.mimeType,
+                data: a.data
+            }))
+        }));
+
+        const res = await fetch('/api/ai/strategy-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: payloadMessages })
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.reply) {
+            StrategyChatState.messages.push({
+                role: 'model',
+                content: data.reply,
+                strategyCode: data.strategyCode || null,
+                strategyId: data.strategyId || null,
+                strategyName: data.strategyName || null
+            });
+            renderStrategyChat();
+
+            if (data.strategyCode) {
+                showToast('💡 New strategy generated! Click "Add Strategy to Scanner & Run" to execute.', 'success');
+            }
+        } else {
+            StrategyChatState.messages.push({
+                role: 'model',
+                content: `⚠️ Error from Quant AI: ${data.error || 'Failed to generate response.'}\n\nPlease try rephrasing or sending a simpler prompt.`
+            });
+            renderStrategyChat();
+        }
+    } catch (err) {
+        StrategyChatState.messages.push({
+            role: 'model',
+            content: `⚠️ Network error: ${err.message}`
+        });
+        renderStrategyChat();
+    } finally {
+        StrategyChatState.isSending = false;
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = 'Send 🚀';
+        }
+    }
+}
+
+async function applyAndSaveStrategyFromChat(strategyId, code, name) {
+    if (!code) {
+        showToast('No Python code to add', 'error');
+        return;
+    }
+    const cleanId = (strategyId || 'custom_strategy_' + Date.now().toString(36).slice(-4))
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
+
+    try {
+        const token = localStorage.getItem('auth_token') || '';
+        const res = await fetch('/api/strategy/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ id: cleanId, code })
+        });
+        const data = await res.json();
+        if (data.success) {
+            AppState.selectedStrategies.add(cleanId);
+            await loadStrategies();
+            closeEditorModal();
+            showToast(`🚀 Strategy "${name || cleanId}" saved & activated for scanning!`, 'success');
+            // Switch to screener so user can run the scan right away
+            switchMainView('screener');
+        } else {
+            showToast(`Failed to save strategy: ${data.error || 'Unknown error'}`, 'error');
+        }
+    } catch (err) {
+        showToast('Error saving strategy: ' + err.message, 'error');
+    }
+}
+
+function loadStrategyIntoCodeEditor(strategyId, code) {
+    switchEditorTab('code');
+    const idInput = document.getElementById('editorStrategyId');
+    const codeArea = document.getElementById('codeEditor');
+    if (idInput) idInput.value = strategyId || '';
+    if (codeArea) codeArea.value = code || '';
+    showToast('Loaded strategy code into Python editor', 'info');
+}
+
+function copyStrategyCodeToClipboard(code) {
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+        showToast('📋 Strategy Python code copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy to clipboard', 'error');
+    });
+}
 
 function openEditorModal(strategyId = null) {
     const modal = document.getElementById('editorModal');
@@ -351,12 +1083,14 @@ function openEditorModal(strategyId = null) {
     const codeArea = document.getElementById('codeEditor');
     const promptInput = document.getElementById('aiPromptInput');
 
-    promptInput.value = '';
+    if (promptInput) promptInput.value = '';
 
     if (strategyId) {
         title.textContent = 'Edit Strategy';
         idInput.value = strategyId;
         idInput.disabled = true;
+
+        switchEditorTab('code');
 
         fetch(`/api/strategy/${strategyId}/code`)
             .then(res => res.json())
@@ -365,9 +1099,12 @@ function openEditorModal(strategyId = null) {
             })
             .catch(() => showToast('Failed to load code', 'error'));
     } else {
-        title.textContent = 'New Strategy';
+        title.textContent = '⚡ Quant Strategy Creator';
         idInput.value = '';
         idInput.disabled = false;
+
+        // Default to Python Code Editor as requested
+        switchEditorTab('code');
 
         fetch('/api/ai/template')
             .then(res => res.json())
@@ -489,15 +1226,15 @@ async function generateWithAI() {
             if (!idInput.value && data.name) {
                 idInput.value = data.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
             }
-            showToast(`Generated using ${data.source === 'gemini' ? 'Gemini AI' : 'Smart Rule Engine'}!`, 'success');
+            showToast('Strategy generated successfully!', 'success');
         } else {
-            showToast(`AI generation error: ${data.error || 'Unknown'}`, 'error');
+            showToast(`Strategy generation error: ${data.error || 'Unknown'}`, 'error');
         }
     } catch (err) {
-        showToast('AI generation failed: ' + err.message, 'error');
+        showToast('Generation failed: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '🤖 Generate Python Code';
+        btn.innerHTML = '⚡ Generate Python Code';
     }
 }
 
@@ -571,7 +1308,7 @@ async function startScan() {
 
         const data = await res.json();
         if (data.status === 'started') {
-            AppState.activeScanInterval = setInterval(pollScanProgress, 800);
+            AppState.activeScanInterval = setInterval(pollScanProgress, 300);
         } else {
             showToast(`Scan start failed: ${data.error || 'Unknown'}`, 'error');
             resetScanUI();
@@ -593,7 +1330,7 @@ async function pollScanProgress() {
 
         fill.style.width = `${progress.percentage}%`;
         ticker.textContent = progress.current_ticker ? `Analyzing ${progress.current_ticker}...` : '';
-        stats.textContent = `${progress.scanned}/${progress.total} (${progress.signals_found} signals)`;
+        stats.textContent = `${(progress.scanned || 0).toLocaleString()} / ${(progress.total || 0).toLocaleString()} (${progress.signals_found} signals)`;
 
         if (progress.done || progress.cancelled) {
             clearInterval(AppState.activeScanInterval);
@@ -604,6 +1341,7 @@ async function pollScanProgress() {
             const resultsRes = await fetch('/api/scan/results');
             const resultsData = await resultsRes.json();
             AppState.scanResults = resultsData.results || [];
+            AppState.hasScanned = true;
             renderResults();
 
             if (AppState.scanResults.length > 0) {
@@ -635,9 +1373,49 @@ function resetScanUI() {
     progressWrapper.classList.remove('active');
 }
 
+async function loadInitialScanResults() {
+    try {
+        const resultsRes = await fetch('/api/scan/results');
+        const resultsData = await resultsRes.json();
+        if (resultsData && Array.isArray(resultsData.results) && resultsData.results.length > 0) {
+            AppState.scanResults = resultsData.results;
+            renderResults();
+        }
+    } catch (err) {
+        console.error('Error loading initial scan results:', err);
+    }
+}
+
 // ============================================================================
 // Screener Results Table Rendering
 // ============================================================================
+
+function getCurrencySymbol(exchange) {
+    switch (exchange) {
+        case 'NYSE':
+        case 'NASDAQ':
+        case 'US':
+            return '$';
+        case 'SSE':
+        case 'SZSE':
+        case 'BSE_BJ':
+            return '¥';
+        case 'HKSE':
+            return 'HK$';
+        case 'TSE':
+            return '¥';
+        case 'LSE':
+            return '£';
+        case 'TSX':
+            return 'CA$';
+        case 'FSE':
+            return '€';
+        case 'ASX':
+            return 'A$';
+        default:
+            return '₹';
+    }
+}
 
 function renderResults() {
     const tbody = document.getElementById('resultsTableBody');
@@ -694,6 +1472,25 @@ function renderResults() {
     }
 
     if (filtered.length === 0) {
+        if (!AppState.hasScanned && AppState.scanResults.length === 0) {
+            countEl.textContent = 'Select strategies and universes to scan';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <div class="empty-state-title">Ready to Scan with Palgoryx</div>
+                            <div class="empty-state-desc">
+                                Select one or more quantitative strategies, choose market universes (NSE, BSE, MCX & NCDEX Commodities), and click
+                                <strong>Execute Scan 🚀</strong> to trigger Palgoryx algorithmic screening.
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
         tbody.innerHTML = `
             <tr>
                 <td colspan="7">
@@ -721,7 +1518,7 @@ function renderResults() {
         tr.innerHTML = `
             <td class="ticker-cell" style="font-weight:900; font-family:var(--font-display);">${r.symbol}</td>
             <td class="mono">${r.exchange}</td>
-            <td class="mono price-cell">₹${r.price.toFixed(2)}</td>
+            <td class="mono price-cell">${getCurrencySymbol(r.exchange)}${r.price.toFixed(2)}</td>
             <td class="mono change-cell ${changeClass}">${changeSign}${r.change_pct.toFixed(2)}%</td>
             <td>
                 <span class="signal-badge ${isBuy ? 'signal-buy' : 'signal-sell'}">
@@ -732,14 +1529,26 @@ function renderResults() {
                 ${escapeHtml(logicStr)}
             </td>
             <td>
-                <button class="signal-badge" style="cursor:pointer; background: var(--ink); color:white; border:1.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size:0.68rem;" onclick="openChartForSymbol('${r.symbol}', '${r.exchange}')">
-                    VIEW CHART
+                <button class="btn-chart-action" onclick="openChartForSymbol('${r.symbol}', '${r.exchange}')" title="Open ${r.symbol} Interactive Live Chart & Radar">
+                    <span class="btn-chart-icon-wrap">
+                        <svg class="candlestick-mini-svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                            <line x1="3" y1="2" x2="3" y2="14" stroke="currentColor" stroke-width="1.2"/>
+                            <rect x="1.5" y="5" width="3" height="6" fill="currentColor"/>
+                            <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" stroke-width="1.2"/>
+                            <rect x="6.5" y="4" width="3" height="8" fill="currentColor"/>
+                            <line x1="13" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.2"/>
+                            <rect x="11.5" y="4" width="3" height="5" fill="currentColor"/>
+                        </svg>
+                        <span class="btn-chart-emoji">📈</span>
+                    </span>
+                    <span class="btn-chart-text">Chart</span>
+                    <span class="btn-chart-arrow">↗</span>
                 </button>
             </td>
         `;
 
         tr.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'BUTTON') {
+            if (!e.target.closest('button')) {
                 openChartForSymbol(r.symbol, r.exchange);
             }
         });
@@ -749,12 +1558,21 @@ function renderResults() {
 }
 
 function openChartForSymbol(symbol, exchange) {
+    if (AppState.currentView !== 'chart') {
+        AppState.previousView = AppState.currentView;
+    }
     AppState.chartSymbol = symbol;
     AppState.chartExchange = exchange;
 
+    // Ensure direct chart mode (Zero popups, zero notifications, direct loading)
+    if (typeof setChartMode === 'function') {
+        setChartMode('signals');
+    }
+
     switchMainView('chart');
 
-    const interval = document.getElementById('timeframeSelect').value;
+    const tfSelect = document.getElementById('chartTimeframeSelect') || document.getElementById('timeframeSelect');
+    const interval = tfSelect ? tfSelect.value : (AppState.chartInterval || '1d');
     const strategyIds = Array.from(AppState.selectedStrategies).join(',');
     loadChart(symbol, exchange, interval, strategyIds);
 }
@@ -776,7 +1594,7 @@ function exportResults() {
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    downloadBlob(csvContent, `screener_signals_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+    downloadBlob(csvContent, `palgoryx_signals_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
 }
 
 // ============================================================================
@@ -832,7 +1650,7 @@ async function runBacktestSimulation() {
 
         const data = await res.json();
         if (data.status === 'started') {
-            AppState.activeBacktestInterval = setInterval(pollBacktestProgress, 800);
+            AppState.activeBacktestInterval = setInterval(pollBacktestProgress, 300);
         } else {
             showToast(`Backtest error: ${data.error || 'Unknown'}`, 'error');
             resetBacktestUI();
@@ -854,7 +1672,7 @@ async function pollBacktestProgress() {
 
         fill.style.width = `${progress.percentage}%`;
         ticker.textContent = progress.current_stock ? `Testing ${progress.current_stock}...` : '';
-        stats.textContent = `${progress.completed}/${progress.total} (${progress.percentage}%)`;
+        stats.textContent = `${(progress.completed || 0).toLocaleString()} / ${(progress.total || 0).toLocaleString()} (${progress.percentage}%)`;
 
         if (progress.status === 'completed' || progress.cancelled) {
             clearInterval(AppState.activeBacktestInterval);
@@ -881,7 +1699,7 @@ function cancelBacktestSimulation() {
 function resetBacktestUI() {
     const runBtn = document.getElementById('runBacktestBtn');
     runBtn.disabled = false;
-    runBtn.textContent = '⚡ Run Backtest Simulation';
+    runBtn.textContent = 'Backtest';
 
     const progressWrapper = document.getElementById('btProgressWrapper');
     progressWrapper.classList.remove('active');
@@ -1404,7 +2222,7 @@ async function exportCloudBackup() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        downloadBlob(JSON.stringify(data, null, 2), `trading_screener_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+        downloadBlob(JSON.stringify(data, null, 2), `palgory_cloud_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
         showToast('☁️ Cloud backup exported successfully!', 'success');
     } catch (e) {
         showToast('Export failed: ' + e.message, 'error');
@@ -1584,4 +2402,532 @@ function downloadBlob(content, filename, contentType) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// ============================================================================
+// Exchange Watchlists Module
+// ============================================================================
+
+let watchlistInitialized = false;
+
+async function initWatchlistView() {
+    if (!watchlistInitialized) {
+        watchlistInitialized = true;
+        await loadWatchlistsOverview();
+    }
+    await loadCurrentWatchlist();
+}
+
+async function loadWatchlistsOverview() {
+    try {
+        const res = await fetch('/api/watchlists/overview');
+        const data = await res.json();
+        AppState.watchlistsOverview = data.watchlists || [];
+        renderWatchlistSidebar(AppState.watchlistsOverview);
+    } catch (err) {
+        console.error('Failed to load watchlists overview:', err);
+    }
+}
+
+function renderWatchlistSidebar(watchlists) {
+    const container = document.getElementById('watchlistNavList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Group watchlists according to requested order:
+    // #US, #China, #Japan, #UK, #Canada, #Germany, #Australia, #India, Commodities, Custom
+    const categoryOrder = [
+        { key: 'US', title: '#US - United States' },
+        { key: 'China / HK', title: '#China & Hong Kong' },
+        { key: 'Japan', title: '#Japan' },
+        { key: 'UK', title: '#UK - United Kingdom' },
+        { key: 'Canada', title: '#Canada' },
+        { key: 'Germany', title: '#Germany' },
+        { key: 'Australia', title: '#Australia' },
+        { key: 'India', title: '#India - NSE & BSE' },
+        { key: 'Commodities', title: '#Commodities - MCX & NCDEX' },
+        { key: 'Custom', title: '⭐ Custom & Starred' },
+    ];
+
+    categoryOrder.forEach(cat => {
+        const matching = watchlists.filter(w => w.category === cat.key);
+        if (matching.length === 0) return;
+
+        const catHeader = document.createElement('div');
+        catHeader.className = 'watchlist-nav-category';
+        catHeader.textContent = cat.title;
+        container.appendChild(catHeader);
+
+        matching.forEach(w => {
+            const item = document.createElement('div');
+            const isActive = AppState.currentWatchlist === w.key;
+            item.className = `watchlist-nav-item ${isActive ? 'active' : ''}`;
+            item.dataset.key = w.key;
+            item.dataset.name = w.name;
+
+            const badgeClass = getBadgeClassForExchange(w.exchange);
+
+            const countDisplay = w.key === 'custom'
+                ? AppState.starredSymbols.size
+                : w.count.toLocaleString();
+
+            item.innerHTML = `
+                <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
+                    <span>${w.flag}</span>
+                    <span style="font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${w.name}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                    <span class="text-xs text-muted mono" style="font-weight:700;">${countDisplay}</span>
+                    <span class="badge ${badgeClass}" style="font-size:0.6rem; padding:1px 4px;">${w.exchange}</span>
+                </div>
+            `;
+
+            item.addEventListener('click', () => {
+                selectWatchlist(w.key);
+            });
+
+            container.appendChild(item);
+        });
+    });
+}
+
+function filterWatchlistSidebar(query) {
+    const q = (query || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.watchlist-nav-item');
+    items.forEach(el => {
+        const name = (el.dataset.name || '').toLowerCase();
+        const key = (el.dataset.key || '').toLowerCase();
+        const matches = !q || name.includes(q) || key.includes(q);
+        el.style.display = matches ? 'flex' : 'none';
+    });
+}
+
+function selectWatchlist(universeKey) {
+    AppState.currentWatchlist = universeKey;
+    AppState.watchlistPage = 1;
+
+    // Update active class in sidebar
+    document.querySelectorAll('.watchlist-nav-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.key === universeKey);
+    });
+
+    loadCurrentWatchlist();
+}
+
+let wlSearchDebounceTimer = null;
+function onWatchlistSearchInput(val) {
+    clearTimeout(wlSearchDebounceTimer);
+    wlSearchDebounceTimer = setTimeout(() => {
+        AppState.watchlistSearch = val.trim();
+        AppState.watchlistPage = 1;
+        loadCurrentWatchlist();
+    }, 250);
+}
+
+function setWatchlistFilter(filterType) {
+    AppState.watchlistFilter = filterType;
+    AppState.watchlistPage = 1;
+
+    ['wlFilterAll', 'wlFilterGainers', 'wlFilterLosers', 'wlFilterStarred'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('active');
+    });
+
+    const activeMap = {
+        all: 'wlFilterAll',
+        gainers: 'wlFilterGainers',
+        losers: 'wlFilterLosers',
+        starred: 'wlFilterStarred'
+    };
+    const activeBtn = document.getElementById(activeMap[filterType]);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    loadCurrentWatchlist();
+}
+
+function onWatchlistSortChange(val) {
+    AppState.watchlistSort = val;
+    AppState.watchlistPage = 1;
+    loadCurrentWatchlist();
+}
+
+function onWatchlistLimitChange(val) {
+    AppState.watchlistLimit = parseInt(val, 10) || 50;
+    AppState.watchlistPage = 1;
+    loadCurrentWatchlist();
+}
+
+function changeWatchlistPage(dir) {
+    const totalPages = AppState.watchlistData ? AppState.watchlistData.totalPages : 1;
+    if (dir === 'prev') {
+        if (AppState.watchlistPage > 1) AppState.watchlistPage--;
+    } else if (dir === 'next') {
+        if (AppState.watchlistPage < totalPages) AppState.watchlistPage++;
+    } else if (dir === 'last') {
+        AppState.watchlistPage = totalPages;
+    } else if (typeof dir === 'number') {
+        AppState.watchlistPage = Math.max(1, Math.min(totalPages, dir));
+    }
+    loadCurrentWatchlist();
+}
+
+async function loadCurrentWatchlist() {
+    const tbody = document.getElementById('watchlistTableBody');
+    if (!tbody) return;
+
+    const starredList = Array.from(AppState.starredSymbols).join(',');
+
+    // Show loading state
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="9" style="text-align:center; padding:30px;">
+                <div class="spinner" style="margin:0 auto 10px;"></div>
+                Loading exchange scrips...
+            </td>
+        </tr>
+    `;
+
+    try {
+        const params = new URLSearchParams({
+            page: String(AppState.watchlistPage),
+            limit: String(AppState.watchlistLimit),
+            search: AppState.watchlistSearch,
+            sort: AppState.watchlistSort,
+            filter: AppState.watchlistFilter,
+            starred: starredList,
+        });
+
+        if (AppState.currentWatchlist === 'custom') {
+            params.set('customTickers', starredList);
+        }
+
+        const res = await fetch(`/api/watchlist/${AppState.currentWatchlist}?${params.toString()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        AppState.watchlistData = data;
+
+        renderWatchlistHeaderAndKPIs(data);
+        renderWatchlistTable(data);
+        renderWatchlistPagination(data);
+    } catch (err) {
+        console.error('Failed to load watchlist:', err);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align:center; padding:30px; color:var(--danger);">
+                    ⚠️ Failed to load exchange scrips: ${err.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function renderWatchlistHeaderAndKPIs(data) {
+    const titleEl = document.getElementById('wlTitle');
+    const badgeEl = document.getElementById('wlExchangeBadge');
+    const catBadgeEl = document.getElementById('wlCategoryBadge');
+    const subtitleEl = document.getElementById('wlSubtitle');
+
+    if (titleEl) titleEl.textContent = `${data.meta?.flag || '📈'} ${data.name}`;
+    if (badgeEl) {
+        badgeEl.textContent = data.exchange;
+        badgeEl.className = `badge ${getBadgeClassForExchange(data.exchange)}`;
+    }
+    if (catBadgeEl) catBadgeEl.textContent = `[ ${data.meta?.country || 'Global'} Equities ]`;
+    if (subtitleEl) {
+        subtitleEl.textContent = `${data.rawTotal.toLocaleString()} listed instruments • Currency: ${data.meta?.currency || '₹'} • ${data.meta?.description || 'Active market scanner'}`;
+    }
+
+    // KPIs
+    const kpiTotal = document.getElementById('wlKpiTotal');
+    const kpiBreadth = document.getElementById('wlKpiBreadth');
+    const kpiTopGainer = document.getElementById('wlKpiTopGainer');
+    const kpiTopLoser = document.getElementById('wlKpiTopLoser');
+
+    if (kpiTotal) kpiTotal.textContent = data.rawTotal.toLocaleString();
+    if (kpiBreadth) {
+        kpiBreadth.innerHTML = `<span class="text-success">${data.gainersCount.toLocaleString()} 🟢</span> / <span class="text-danger">${data.losersCount.toLocaleString()} 🔴</span>`;
+    }
+    if (kpiTopGainer) {
+        if (data.topGainer) {
+            kpiTopGainer.innerHTML = `+${data.topGainer.changePct.toFixed(2)}% <span style="font-size:0.75rem; color:var(--ink-muted);">${data.topGainer.symbol}</span>`;
+        } else {
+            kpiTopGainer.textContent = '--';
+        }
+    }
+    if (kpiTopLoser) {
+        if (data.topLoser) {
+            kpiTopLoser.innerHTML = `${data.topLoser.changePct.toFixed(2)}% <span style="font-size:0.75rem; color:var(--ink-muted);">${data.topLoser.symbol}</span>`;
+        } else {
+            kpiTopLoser.textContent = '--';
+        }
+    }
+
+    // Starred count in filter button
+    const starredLabel = document.getElementById('starredCountLabel');
+    if (starredLabel) starredLabel.textContent = String(AppState.starredSymbols.size);
+}
+
+function renderWatchlistTable(data) {
+    const tbody = document.getElementById('watchlistTableBody');
+    if (!tbody) return;
+
+    if (!data.stocks || data.stocks.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">
+                    <div class="empty-state" style="padding:40px 20px;">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">No scrips found in ${data.name}</div>
+                        <div class="empty-state-desc">
+                            Try adjusting your search query, clear filters, or star stocks to build your custom watchlist.
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    data.stocks.forEach(stock => {
+        const tr = document.createElement('tr');
+        const isStarred = AppState.starredSymbols.has(stock.symbol.toUpperCase());
+        const isUp = stock.changePct >= 0;
+        const sign = isUp ? '+' : '';
+        const changeClass = isUp ? 'text-success' : 'text-danger';
+        const changeBadgeBg = isUp ? 'rgba(50,205,50,0.14)' : 'rgba(255,68,68,0.14)';
+        const changeBadgeBorder = isUp ? 'rgba(50,205,50,0.4)' : 'rgba(255,68,68,0.4)';
+        const arrow = isUp ? '▲' : '▼';
+
+        // Day range calculation
+        const rangeSpread = Math.max(0.001, stock.high - stock.low);
+        const posPct = Math.max(0, Math.min(100, ((stock.price - stock.low) / rangeSpread) * 100));
+
+        const badgeClass = getBadgeClassForExchange(stock.exchange);
+
+        tr.innerHTML = `
+            <td style="text-align:center;">
+                <button class="watchlist-star-btn ${isStarred ? 'starred' : ''}"
+                        onclick="toggleStarSymbol('${stock.symbol}', '${stock.exchange}', event)"
+                        title="${isStarred ? 'Remove from Starred' : 'Add to Starred'}">
+                    ${isStarred ? '★' : '☆'}
+                </button>
+            </td>
+            <td>
+                <div style="display:flex; flex-direction:column;">
+                    <span class="mono" style="font-weight:800; font-size:0.92rem; color:var(--ink);">${stock.symbol}</span>
+                </div>
+            </td>
+            <td>
+                <span class="badge ${badgeClass}">${stock.exchange}</span>
+            </td>
+            <td style="text-align:right;">
+                <span class="mono" style="font-weight:700; font-size:0.92rem;">${stock.currency}${stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </td>
+            <td style="text-align:right;">
+                <span class="mono ${changeClass}" style="font-weight:700;">${sign}${stock.change.toFixed(2)}</span>
+            </td>
+            <td style="text-align:right;">
+                <span class="mono ${changeClass}" style="display:inline-block; padding:2px 6px; background:${changeBadgeBg}; border:1px solid ${changeBadgeBorder}; font-weight:800; font-size:0.78rem;">
+                    ${arrow} ${sign}${stock.changePct.toFixed(2)}%
+                </span>
+            </td>
+            <td>
+                <div class="day-range-wrapper">
+                    <div class="day-range-track">
+                        <div class="day-range-fill" style="left:0; width:${posPct}%;"></div>
+                    </div>
+                    <div class="day-range-labels">
+                        <span>L: ${stock.currency}${stock.low.toFixed(1)}</span>
+                        <span>H: ${stock.currency}${stock.high.toFixed(1)}</span>
+                    </div>
+                </div>
+            </td>
+            <td style="text-align:right;">
+                <span class="mono text-muted text-xs">${formatVolume(stock.volume)}</span>
+            </td>
+            <td style="text-align:center;">
+                <div style="display:flex; gap:4px; justify-content:center;">
+                    <button class="btn btn-xs btn-primary" onclick="openChartForSymbol('${stock.symbol}', '${stock.exchange}')" title="Interactive Candlestick Chart">
+                        📈 Chart
+                    </button>
+                    <button class="btn btn-xs btn-secondary" onclick="quickBacktestSymbol('${stock.symbol}', '${stock.exchange}')" title="Backtest this symbol">
+                        🧪
+                    </button>
+                    <button class="btn btn-xs btn-ghost" onclick="quickScanSymbol('${stock.symbol}', '${stock.exchange}')" title="Scan this symbol">
+                        🔍
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+function renderWatchlistPagination(data) {
+    const info = document.getElementById('wlPaginationInfo');
+    const label = document.getElementById('wlCurrentPageLabel');
+    const btnFirst = document.getElementById('wlPageFirst');
+    const btnPrev = document.getElementById('wlPagePrev');
+    const btnNext = document.getElementById('wlPageNext');
+    const btnLast = document.getElementById('wlPageLast');
+
+    const start = data.total === 0 ? 0 : (data.page - 1) * data.limit + 1;
+    const end = Math.min(data.total, data.page * data.limit);
+
+    if (info) info.textContent = `Showing ${start.toLocaleString()} - ${end.toLocaleString()} of ${data.total.toLocaleString()} scrips`;
+    if (label) label.textContent = `Page ${data.page} of ${data.totalPages}`;
+
+    if (btnFirst) btnFirst.disabled = data.page <= 1;
+    if (btnPrev) btnPrev.disabled = data.page <= 1;
+    if (btnNext) btnNext.disabled = data.page >= data.totalPages;
+    if (btnLast) btnLast.disabled = data.page >= data.totalPages;
+}
+
+function getBadgeClassForExchange(exchange) {
+    const map = {
+        'NYSE': 'badge-nyse',
+        'NASDAQ': 'badge-nasdaq',
+        'US': 'badge-us',
+        'SSE': 'badge-sse',
+        'SZSE': 'badge-szse',
+        'BSE_BJ': 'badge-bj',
+        'HKSE': 'badge-hkse',
+        'TSE': 'badge-tse',
+        'LSE': 'badge-lse',
+        'TSX': 'badge-tsx',
+        'FSE': 'badge-fse',
+        'ASX': 'badge-asx',
+        'NSE': 'badge-primary',
+        'BSE': 'badge-danger',
+        'MCX': 'badge-warning',
+        'NCDEX': 'badge-info',
+        'COMMODITY': 'badge-warning',
+        'MULTI': 'badge-primary'
+    };
+    return map[exchange] || 'badge-primary';
+}
+
+function formatVolume(vol) {
+    if (!vol) return '0';
+    if (vol >= 10000000) return (vol / 10000000).toFixed(2) + ' Cr';
+    if (vol >= 1000000) return (vol / 1000000).toFixed(2) + 'M';
+    if (vol >= 100000) return (vol / 100000).toFixed(2) + 'L';
+    if (vol >= 1000) return (vol / 1000).toFixed(1) + 'K';
+    return vol.toLocaleString();
+}
+
+function toggleStarSymbol(symbol, exchange, event) {
+    if (event) event.stopPropagation();
+    const sym = symbol.toUpperCase();
+    if (AppState.starredSymbols.has(sym)) {
+        AppState.starredSymbols.delete(sym);
+        showToast(`Removed ${sym} from Starred Watchlist`, 'info');
+    } else {
+        AppState.starredSymbols.add(sym);
+        showToast(`Starred ${sym} ⭐`, 'success');
+    }
+
+    localStorage.setItem('palgoryx_starred_symbols', JSON.stringify(Array.from(AppState.starredSymbols)));
+
+    // Re-render table row stars
+    document.querySelectorAll('.watchlist-star-btn').forEach(btn => {
+        const row = btn.closest('tr');
+        if (row && row.querySelector('.mono')) {
+            const rowSym = row.querySelector('.mono').textContent.trim();
+            const starred = AppState.starredSymbols.has(rowSym);
+            btn.classList.toggle('starred', starred);
+            btn.textContent = starred ? '★' : '☆';
+        }
+    });
+
+    const starredLabel = document.getElementById('starredCountLabel');
+    if (starredLabel) starredLabel.textContent = String(AppState.starredSymbols.size);
+
+    // If currently viewing starred filter, reload
+    if (AppState.watchlistFilter === 'starred' || AppState.currentWatchlist === 'custom') {
+        loadCurrentWatchlist();
+    }
+}
+
+function quickBacktestSymbol(symbol, exchange) {
+    switchMainView('backtest');
+    showToast(`Loaded ${symbol} for backtesting`, 'info');
+}
+
+function quickScanSymbol(symbol, exchange) {
+    switchMainView('screener');
+    AppState.selectedUniverses.clear();
+    AppState.selectedUniverses.add('custom');
+    const customInput = document.getElementById('customTickers');
+    if (customInput) customInput.value = symbol;
+    renderUniverseMultiSelect();
+    startScan();
+}
+
+function scanCurrentWatchlist() {
+    switchMainView('screener');
+    AppState.selectedUniverses.clear();
+    AppState.selectedUniverses.add(AppState.currentWatchlist);
+    renderUniverseMultiSelect();
+    showToast(`Selected ${AppState.currentWatchlist} for screening. Click Execute Scan!`, 'info');
+}
+
+function backtestCurrentWatchlist() {
+    switchMainView('backtest');
+    showToast(`Configured backtesting on ${AppState.currentWatchlist}`, 'info');
+}
+
+async function copyWatchlistTickers() {
+    if (!AppState.watchlistData || !AppState.watchlistData.stocks) {
+        showToast('Watchlist data not loaded', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/watchlist/${AppState.currentWatchlist}/export?format=csv`);
+        const text = await res.text();
+        const lines = text.split('\n').slice(1).map(l => {
+            const m = l.match(/"([^"]+)"/);
+            return m ? m[1] : '';
+        }).filter(Boolean);
+
+        const tickerString = lines.join(', ');
+        await navigator.clipboard.writeText(tickerString);
+        showToast(`Copied ${lines.length} tickers to clipboard! 📋`, 'success');
+    } catch (err) {
+        const rendered = AppState.watchlistData.stocks.map(s => s.symbol).join(', ');
+        await navigator.clipboard.writeText(rendered);
+        showToast(`Copied page tickers to clipboard! 📋`, 'success');
+    }
+}
+
+function toggleWlExportMenu(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('wlExportMenu');
+    if (menu) menu.classList.toggle('hidden');
+}
+
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('wlExportMenu');
+    if (menu && !menu.classList.contains('hidden')) {
+        const btn = document.getElementById('wlExportDropdownBtn');
+        if (!btn || !btn.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    }
+});
+
+function exportWatchlistCSV() {
+    const url = `/api/watchlist/${AppState.currentWatchlist}/export?format=csv`;
+    window.location.href = url;
+    showToast(`Downloading ${AppState.currentWatchlist} CSV...`, 'info');
+}
+
+function exportWatchlistTradingView() {
+    const url = `/api/watchlist/${AppState.currentWatchlist}/export?format=tradingview`;
+    window.location.href = url;
+    showToast(`Downloading ${AppState.currentWatchlist} TradingView list...`, 'info');
 }

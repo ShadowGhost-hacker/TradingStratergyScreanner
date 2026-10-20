@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Scan Indian Stock Market (NSE &amp; BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
-    <meta property="og:title" content="Trading Strategy Screener &amp; Backtester">
-    <meta property="og:description" content="Scan Indian Stock Market (NSE &amp; BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.">
-    <title>Trading Strategy Screener &amp; Backtester</title>
+    <meta name="description" content="Palgoryx: Global &amp; Indian Quantitative Trading Screener &amp; Backtester for NYSE, NASDAQ, SSE, SZSE, BSE, HKSE, TSE, LSE, TSX, FSE, ASX, NSE &amp; Commodities. Interactive TradingView charts, AI Strategy Generator, and Free Cloud Storage.">
+    <meta property="og:title" content="Palgoryx — Quantitative Trading Strategy Screener &amp; Backtester">
+    <meta property="og:description" content="Palgoryx: Global &amp; Indian Quantitative Trading Screener &amp; Backtester for NYSE, NASDAQ, SSE, SZSE, BSE, HKSE, TSE, LSE, TSX, FSE, ASX, NSE &amp; Commodities. Interactive TradingView charts, AI Strategy Generator, and Free Cloud Storage.">
+    <title>Palgoryx — Quantitative Trading Strategy Screener &amp; Backtester</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/binary_pulse_logo.svg">
 
     <!-- Google Fonts for Variation 23 Neo-Brutalist Theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,17 +54,131 @@
         <!-- ================================================================ -->
         <nav class="navbar">
             <div class="navbar-brand" onclick="switchMainView('screener')">
-                <div class="brand-icon">📈</div>
-                <span class="brand-title">Screener <span class="brand-subtitle">v.1.0</span></span>
+                <div class="brand-icon-binary-pulse" title="Palgoryx: Cybernetic Quant Engine">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <!-- Deep Neon Glow for Cyber Circuitry -->
+                            <filter id="pNeonBloom" x="-40%" y="-40%" width="180%" height="180%">
+                                <feGaussianBlur stdDeviation="2.2" result="blur1"/>
+                                <feGaussianBlur stdDeviation="5" result="blur2"/>
+                                <feMerge>
+                                    <feMergeNode in="blur2"/>
+                                    <feMergeNode in="blur1"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <filter id="pSoftGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="1.2" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <linearGradient id="pGreenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#00D26A"/>
+                                <stop offset="45%" stop-color="#00FF66"/>
+                                <stop offset="100%" stop-color="#39FF14"/>
+                            </linearGradient>
+                            <linearGradient id="pCoreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#B3FFC8"/>
+                                <stop offset="40%" stop-color="#FFFFFF"/>
+                                <stop offset="100%" stop-color="#FFFFFF"/>
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Dark Cyber Matrix Background -->
+                        <rect width="100" height="100" rx="14" fill="#04070A"/>
+
+                        <!-- Ambient Neon Glow in Background -->
+                        <circle cx="50" cy="50" r="38" fill="#00FF66" opacity="0.08" filter="url(#pNeonBloom)"/>
+
+                        <!-- 1. LETTER 'P' CIRCUIT BOARD FRAME & PCB TRACES -->
+                        <g filter="url(#pNeonBloom)">
+                            <!-- Outer Boundary Contour of 'P' -->
+                            <path d="M 27 22 L 61 22 C 73 22, 79 31, 79 43 C 79 53, 72 63, 56 68 L 47 68" 
+                                  stroke="#00FF66" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M 27 22 L 27 78 L 36 78 L 36 68 L 41 68" 
+                                  stroke="#00FF66" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="27" cy="22" r="2.2" fill="#00FF66"/>
+
+                            <!-- Upper Loop Circuit Tracks -->
+                            <path d="M 31 26 L 46 26 L 46 32 L 50 32" stroke="#00FF66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="31" cy="26" r="1.6" fill="#00FF66"/>
+                            <circle cx="50" cy="32" r="1.8" fill="#00FF66"/>
+
+                            <path d="M 31 31 L 40 31 L 40 40 L 44 40" stroke="#00FF66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="31" cy="31" r="1.6" fill="#00FF66"/>
+                            <circle cx="44" cy="40" r="1.7" fill="#FFFFFF"/>
+
+                            <circle cx="31" cy="42" r="1.6" fill="#00FF66"/>
+
+                            <path d="M 53 30 C 56 31, 59 33, 60 34" stroke="#00FF66" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="53" cy="30" r="1.6" fill="#FFFFFF"/>
+                            <circle cx="60" cy="34" r="1.8" fill="#FFFFFF"/>
+
+                            <path d="M 50 25 C 62 25, 68 31, 68 41" stroke="#00FF66" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="8,3"/>
+
+                            <!-- Lower Loop Circuit Tracks -->
+                            <path d="M 74 46 C 74 54, 69 62, 57 65" stroke="#00FF66" stroke-width="1.9" stroke-linecap="round"/>
+                            <circle cx="74" cy="46" r="1.7" fill="#FFFFFF"/>
+                            <circle cx="57" cy="65" r="1.7" fill="#00FF66"/>
+
+                            <path d="M 68 48 C 67 56, 62 61, 53 63" stroke="#00FF66" stroke-width="1.7" stroke-linecap="round"/>
+                            <circle cx="68" cy="48" r="1.7" fill="#00FF66"/>
+                            <circle cx="53" cy="63" r="1.7" fill="#FFFFFF"/>
+
+                            <circle cx="72" cy="39" r="1.7" fill="#00FF66"/>
+                            <path d="M 62 55 L 57 58" stroke="#00FF66" stroke-width="1.6" stroke-linecap="round"/>
+                            <circle cx="62" cy="55" r="1.6" fill="#FFFFFF"/>
+
+                            <!-- Lower Stem Circuit -->
+                            <path d="M 31 68 L 31 74 L 35 74" stroke="#00FF66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="31" cy="68" r="1.7" fill="#FFFFFF"/>
+                            <circle cx="35" cy="74" r="1.5" fill="#00FF66"/>
+                        </g>
+
+                        <!-- 2. CENTRAL BULLISH BREAKOUT ZIGZAG ARROW -->
+                        <!-- Outer Neon Green Glow Shaft -->
+                        <path d="M 21 70 L 42 41 L 50 58 L 74 27" 
+                              stroke="url(#pGreenGrad)" stroke-width="5.8" 
+                              stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"
+                              filter="url(#pNeonBloom)"/>
+
+                        <!-- Inner Brilliant White Core Line -->
+                        <path d="M 21 70 L 42 41 L 50 58 L 74 27" 
+                              stroke="url(#pCoreGrad)" stroke-width="2.6" 
+                              stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"
+                              filter="url(#pSoftGlow)"/>
+
+                        <!-- Breakout Arrowhead Outer Green -->
+                        <path d="M 83 16 L 66 24 L 71 29 L 77 35 Z" 
+                              fill="url(#pGreenGrad)" filter="url(#pNeonBloom)"/>
+
+                        <!-- Arrowhead Inner Core White Highlight -->
+                        <polygon points="82,17 70,23 72,27 75,30" 
+                                 fill="#FFFFFF" filter="url(#pSoftGlow)"/>
+                    </svg>
+                </div>
+                <div class="brand-text-block">
+                    <div class="brand-title-row">
+                        <span class="brand-title-text">PALGORY<span class="brand-x">X</span></span>
+                    </div>
+                    <div class="brand-subtitle-badge">
+                        <span class="pulse-live-dot"></span> BINARY PULSE
+                    </div>
+                </div>
             </div>
 
-            <!-- View Switcher (Screener vs Backtest Simulator) -->
+            <!-- View Switcher -->
             <div class="nav-view-switcher">
                 <button class="nav-tab active" id="tabScreener" onclick="switchMainView('screener')">
-                    🔍 Market Screener
+                    🔍 Palgoryx Screener
+                </button>
+                <button class="nav-tab" id="tabWatchlist" onclick="switchMainView('watchlist')">
+                    📋 Exchange Watchlists
                 </button>
                 <button class="nav-tab" id="tabBacktest" onclick="switchMainView('backtest')">
-                    🧪 Backtest Simulator
+                    🧪 Backtest
                 </button>
             </div>
 
@@ -93,7 +208,7 @@
                             <span class="user-dropdown-email" id="dropdownEmail">user@example.com</span>
                         </div>
                         <div class="user-dropdown-divider"></div>
-                        <button class="user-dropdown-item" onclick="openCloudModal()">☁️ Cloud Data & Sync</button>
+                        <button class="user-dropdown-item" onclick="openCloudModal()">☁️ Palgory Cloud Data</button>
                         <button class="user-dropdown-item" onclick="switchMainView('backtest'); showSavedBacktests();">📊 My Saved Backtests</button>
                         <div class="user-dropdown-divider"></div>
                         <button class="user-dropdown-item text-danger" onclick="logout()">🚪 Sign Out</button>
@@ -108,12 +223,61 @@
         <!-- ================================================================ -->
         <!-- Main Application Workspace -->
         <!-- ================================================================ -->
-        <div class="main-content">
+        <div class="main-content" id="mainContent">
+
+            <!-- ============================================================ -->
+            <!-- New Bar Column Left of Left Panel (Activity Rail) -->
+            <!-- Houses the ONLY option to expand or minimize the left panel -->
+            <!-- ============================================================ -->
+            <aside class="rail-bar-left" id="railBarLeft" aria-label="Strategy Navigation Rail">
+                <div class="rail-top">
+                    <!-- The ONLY option to expand or minimize the left panel -->
+                    <button class="rail-toggle-btn" id="railToggleBtn" title="Minimize / Expand Strategy Panel (Ctrl+B)" aria-label="Toggle Strategy Panel">
+                        <svg class="rail-toggle-icon" id="railToggleIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <path id="railToggleArrow" d="M16 15l-3-3 3-3"></path>
+                        </svg>
+                        <span class="rail-tooltip" id="railToggleTooltip">Minimize (Ctrl+B)</span>
+                    </button>
+
+                    <div class="rail-divider"></div>
+
+                    <!-- Quick Section Jump Icons -->
+                    <button class="rail-item-btn active" id="railItemStrategies" onclick="handleRailClick('strategyList')" title="01 Strategies">
+                        <span class="rail-icon">⚡</span>
+                        <span class="rail-tooltip">01 Strategies</span>
+                    </button>
+                    <button class="rail-item-btn" id="railItemConfig" onclick="handleRailClick('screenerConfigSection')" title="02 Scan Config">
+                        <span class="rail-icon">🎯</span>
+                        <span class="rail-tooltip">02 Universes</span>
+                    </button>
+                    <button class="rail-item-btn" id="railItemParams" onclick="handleRailClick('timeframeSelect')" title="03 Timeframes">
+                        <span class="rail-icon">⏱️</span>
+                        <span class="rail-tooltip">03 Timeframe</span>
+                    </button>
+                </div>
+
+                <div class="rail-bottom">
+                    <div class="rail-shortcut-hint" title="Shortcut: Ctrl+B to toggle panel">
+                        <span class="mono">^B</span>
+                    </div>
+                </div>
+            </aside>
 
             <!-- ============================================================ -->
             <!-- Left Sidebar: Strategies & Universes -->
             <!-- ============================================================ -->
-            <aside class="panel-left">
+            <aside class="panel-left" id="panelLeft">
+
+                <!-- Left Panel Header -->
+                <div class="panel-left-topbar">
+                    <div class="panel-left-title-box">
+                        <span class="panel-status-indicator"></span>
+                        <span class="panel-left-topbar-title">Strategy Engine</span>
+                    </div>
+                    <span class="panel-badge-mono">ACTIVE</span>
+                </div>
 
                 <!-- Strategies Section -->
                 <div class="panel-section">
@@ -143,18 +307,23 @@
                         </div>
                     </div>
 
+                    <!-- Global Market Region Filter Tabs -->
+                    <div class="universe-category-tabs" id="universeCategoryTabs">
+                        <!-- Populated dynamically: All, US, China, Japan, UK, Canada, Germany, Australia, India, Commodities -->
+                    </div>
+
                     <!-- Multi-select Stock Universes -->
                     <div class="universe-multi-wrapper" id="universeMultiWrapper">
-                        <!-- Populated dynamically: Nifty 50, All NSE Stocks, All BSE Stocks, F&O, etc. -->
+                        <!-- Populated dynamically across global exchanges -->
                         <div class="spinner" style="margin:10px auto;"></div>
                     </div>
 
                     <!-- Custom Tickers (shown when custom is selected) -->
                     <div class="form-group hidden" id="customTickersWrapper" style="margin-top:10px;">
-                        <label class="form-label">Custom Stock Tickers</label>
+                        <label class="form-label">Custom Watchlist Tickers</label>
                         <input type="text" class="form-input" id="customTickers"
-                               placeholder="RELIANCE, TATASTEEL.NS, TCS.BO, INFY">
-                        <span class="text-xs text-muted">Use .NS for NSE or .BO for BSE</span>
+                               placeholder="AAPL, NVDA, MSFT, RELIANCE, 7203.T, SHEL.L, SHOP.TO">
+                        <span class="text-xs text-muted">Supports global tickers: US, India (.NS/.BO), Japan (.T), UK (.L), Canada (.TO), Germany (.F), Australia (.AX), China (.SS/.SZ/.HK), MCX/NCDEX</span>
                     </div>
 
                     <!-- Timeframe -->
@@ -240,7 +409,7 @@
                     </div>
 
                     <button class="btn btn-scan" id="runBacktestBtn" onclick="runBacktestSimulation()">
-                        ⚡ Run Backtest Simulation
+                        Backtest
                     </button>
 
                     <!-- Backtest Progress -->
@@ -259,6 +428,23 @@
                     </div>
                 </div>
 
+                <!-- Exchange Watchlists Sidebar Section (Visible on Watchlist View) -->
+                <div class="panel-section hidden" id="watchlistSidebarSection">
+                    <div class="panel-section-header">
+                        <span class="panel-section-title">01 Global Exchanges</span>
+                    </div>
+
+                    <div style="margin-bottom:8px;">
+                        <input type="text" class="form-input form-input-sm" id="watchlistSidebarSearch"
+                               placeholder="🔍 Filter exchange..." oninput="filterWatchlistSidebar(this.value)">
+                    </div>
+
+                    <!-- Watchlist Nav List grouped by #US, #China, #Japan, #UK, #Canada, #Germany, #Australia, #India, Commodities -->
+                    <div class="watchlist-nav-list" id="watchlistNavList">
+                        <div class="spinner" style="margin:20px auto;"></div>
+                    </div>
+                </div>
+
             </aside>
 
             <!-- ============================================================ -->
@@ -271,7 +457,7 @@
                     <!-- Results Header Banner (Variation 23) -->
                     <div class="results-header-banner">
                         <div>
-                            <span class="mono" style="color: var(--accent); font-weight: 800; font-size: 0.8rem; background: var(--ink); padding: 4px 10px; display:inline-block;">[ Market Report ]</span>
+                            <span class="mono" style="color: var(--accent); font-weight: 800; font-size: 0.8rem; background: var(--ink); padding: 4px 10px; display:inline-block;">[ Palgoryx Market Report ]</span>
                             <h2 class="results-header-title">Opportunities</h2>
                         </div>
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -319,7 +505,7 @@
                                     <th>Change %</th>
                                     <th>Signal Type</th>
                                     <th>Logic Matrix</th>
-                                    <th>Interaction</th>
+                                    <th>📈 Chart Option</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsTableBody">
@@ -327,10 +513,10 @@
                                     <td colspan="7">
                                         <div class="empty-state">
                                             <div class="empty-state-icon">📊</div>
-                                            <div class="empty-state-title">Ready to Scan the Indian Stock Market</div>
+                                            <div class="empty-state-title">Ready to Scan with Palgoryx</div>
                                             <div class="empty-state-desc">
-                                                Select one or more strategies, choose stock universes (like Nifty 50, All NSE Stocks, All BSE Stocks), and click
-                                                <strong>Execute Scan 🚀</strong> to find matching opportunities.
+                                                Select one or more quantitative strategies, choose market universes (NSE, BSE, MCX & NCDEX Commodities), and click
+                                                <strong>Execute Scan 🚀</strong> to trigger Palgoryx algorithmic screening.
                                             </div>
                                         </div>
                                     </td>
@@ -344,7 +530,7 @@
                 <div id="backtestView" class="hidden">
                     <div class="backtest-dashboard-header">
                         <div>
-                            <h2 style="font-size:1.3rem; margin:0; color:var(--text-primary);">🧪 Backtest Simulator</h2>
+                            <h2 style="font-size:1.3rem; margin:0; color:var(--text-primary);">🧪 Palgoryx Backtest Simulator</h2>
                             <p style="font-size:0.85rem; color:var(--text-tertiary); margin:4px 0 0;">
                                 Historical multi-strategy simulation with portfolio compounding, win rate, and drawdown analysis.
                             </p>
@@ -403,7 +589,7 @@
                             <div class="empty-state" style="padding:40px 0;">
                                 <div class="empty-state-icon">📉</div>
                                 <div class="empty-state-title">No Backtest Executed Yet</div>
-                                <div class="empty-state-desc">Configure your simulation parameters on the left panel and click "Run Backtest Simulation".</div>
+                                <div class="empty-state-desc">Configure your parameters on the left panel and click "Backtest".</div>
                             </div>
                         </div>
                     </div>
@@ -443,41 +629,232 @@
                     </div>
                 </div>
 
-                <!-- 3. Chart View: TradingView Active Suite & Signal Radar -->
+                <!-- 3. Chart View: Interactive Candlestick Chart Suite & Signal Radar -->
                 <div id="chartView" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-                    <div class="chart-header">
-                        <div class="chart-symbol-info">
+                    <div class="chart-header" style="flex-wrap:wrap; gap:8px;">
+                        <div class="chart-symbol-info" style="display:flex; align-items:center; gap:8px;">
                             <button class="btn btn-ghost btn-sm" id="backToResults">← Back</button>
                             <span class="chart-symbol" id="chartSymbolLabel">RELIANCE</span>
                             <span class="chart-exchange-badge" id="chartExchangeBadge">NSE</span>
                             <span class="badge badge-saved-note" id="chartSavedNotesBadge" style="display:none;"></span>
                         </div>
 
-                        <!-- Segmented Switch between Full Active TV and Strategy Signal Radar -->
+                        <!-- Direct Stock Search / Switcher in Chart View -->
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <input type="text" class="form-input form-input-sm mono" id="chartSymbolQuickInput"
+                                   placeholder="Switch stock (e.g. TCS, AAPL)..."
+                                   style="width: 175px; text-transform:uppercase; font-weight:700;"
+                                   onkeydown="if(event.key==='Enter') switchChartSymbolFromInput()">
+                            <button class="btn btn-xs btn-primary" onclick="switchChartSymbolFromInput()" title="Directly load this stock chart">Go ⏎</button>
+                        </div>
+
+                        <!-- Quick Popular Stock Chips -->
+                        <div class="quick-stock-chips" style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                            <span class="mono text-xs text-muted" style="font-weight:700;">Quick:</span>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('AAPL', 'NASDAQ')" title="Load Apple (NASDAQ)">AAPL</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('NVDA', 'NASDAQ')" title="Load Nvidia (NASDAQ)">NVDA</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('TSLA', 'NASDAQ')" title="Load Tesla (NASDAQ)">TSLA</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('MSFT', 'NASDAQ')" title="Load Microsoft (NASDAQ)">MSFT</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('RELIANCE', 'NSE')" title="Load Reliance (NSE)">RELIANCE</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('TCS', 'NSE')" title="Load TCS (NSE)">TCS</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('600519', 'SSE')" title="Load Kweichow Moutai (SSE)">600519</button>
+                            <button class="btn btn-xs btn-ghost" onclick="switchChartSymbol('GOLD', 'MCX')" title="Load Gold (MCX)">GOLD</button>
+                        </div>
+
+                        <!-- Direct Timeframe Selector Toolbar for Chart View -->
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span class="mono text-xs text-muted" style="font-weight:700;">TF:</span>
+                            <select class="form-select form-select-sm mono" id="chartTimeframeSelect"
+                                    onchange="changeChartTimeframe(this.value)"
+                                    style="width:145px; font-weight:700;">
+                                <!-- Populated dynamically with seconds, minutes, hours, days, months -->
+                            </select>
+                        </div>
+
+                        <!-- Indicator Toggles: SMA, EMA, Volume, Signals -->
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <button class="btn btn-xs btn-ghost active" id="btnToggleMA" onclick="toggleChartIndicator('ma')" title="Toggle SMA 20 (Blue) & SMA 50 (Orange)">SMA</button>
+                            <button class="btn btn-xs btn-ghost active" id="btnToggleEMA" onclick="toggleChartIndicator('ema')" title="Toggle EMA 20 (Magenta)">EMA</button>
+                            <button class="btn btn-xs btn-ghost active" id="btnToggleVolume" onclick="toggleChartIndicator('volume')" title="Toggle Volume Histogram">VOL</button>
+                            <button class="btn btn-xs btn-ghost" id="btnToggleSignals" onclick="toggleChartIndicator('signals')" title="Toggle Strategy Signal Markers">🎯 Signals</button>
+                        </div>
+
+                        <!-- Segmented Switch between Direct Native Chart and TradingView External Widget -->
                         <div class="chart-mode-selector">
-                            <button class="chart-mode-btn active" data-mode="active" onclick="setChartMode('active')" title="Full TradingView chart with drawings toolbar, trendlines, 100+ indicators">
-                                📊 TradingView Active Suite
+                            <button class="chart-mode-btn active" data-mode="signals" onclick="setChartMode('signals')" title="Direct Candlestick Chart (Zero popups, instant load for any stock)">
+                                📈 Direct Chart
                             </button>
-                            <button class="chart-mode-btn" data-mode="signals" onclick="setChartMode('signals')" title="Candlestick chart with Strategy BUY/SELL signal markers">
-                                🎯 Strategy Signal Radar
+                            <button class="chart-mode-btn" data-mode="active" onclick="setChartMode('active')" title="TradingView Web Widget">
+                                📊 TradingView Widget
                             </button>
                         </div>
 
-                        <div style="display:flex; gap:8px;">
+                        <div style="display:flex; gap:6px;">
                             <button class="btn btn-sm btn-secondary" onclick="saveCurrentChartToCloud()" title="Save drawings, indicators, and notes to cloud storage">
-                                💾 Save Drawings to Cloud
+                                💾 Cloud
                             </button>
                         </div>
                     </div>
 
-                    <!-- TradingView Advanced Real-Time Chart Container (Exact active view with drawings, indicators, etc.) -->
-                    <div class="chart-container" id="tradingview_active_chart" style="flex:1; width:100%; min-height:480px;">
+                    <!-- OHLCV & Indicator Live Legend Bar -->
+                    <div class="chart-legend-bar" id="chartLegendBar" style="padding:6px 14px; background:var(--bg-tertiary); border-bottom:2px solid var(--border); font-family:var(--font-mono); font-size:0.75rem; display:flex; gap:12px; align-items:center; overflow-x:auto;">
+                        <span id="legendDateTime" class="text-muted">--</span>
+                        <span>O: <strong id="legendOpen">--</strong></span>
+                        <span>H: <strong id="legendHigh">--</strong></span>
+                        <span>L: <strong id="legendLow">--</strong></span>
+                        <span>C: <strong id="legendClose">--</strong></span>
+                        <span>Vol: <strong id="legendVol">--</strong></span>
+                        <span>Change: <strong id="legendChange">--</strong></span>
+                        <span id="legendMA20" style="color:#0088FF; font-weight:700;">SMA20: --</span>
+                        <span id="legendSMA50" style="color:#FFA500; font-weight:700;">SMA50: --</span>
+                        <span id="legendEMA20" style="color:#E040FB; font-weight:700;">EMA20: --</span>
+                    </div>
+
+                    <!-- Primary Interactive Canvas Chart (Native Lightweight Charts - Zero popups, Zero notifications, Instantaneous load, Never resets to Apple) -->
+                    <div class="chart-container" id="lightweight_chart_container" style="flex:1; width:100%; min-height:480px; position:relative;">
+                        <!-- Lightweight Charts Canvas -->
+                    </div>
+
+                    <!-- Optional TradingView External Widget Container (hidden by default) -->
+                    <div class="chart-container" id="tradingview_active_chart" style="flex:1; width:100%; min-height:480px; display:none;">
                         <!-- Embeds TradingView Advanced Widget -->
                     </div>
+                </div>
 
-                    <!-- Lightweight Charts Container for Strategy BUY/SELL markers (hidden by default) -->
-                    <div class="chart-container" id="lightweight_chart_container" style="flex:1; width:100%; min-height:480px; display:none;">
-                        <!-- Lightweight Charts Canvas -->
+                <!-- 4. Exchange Watchlist View -->
+                <div id="watchlistView" class="hidden">
+                    <div class="results-header-banner">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="mono" id="wlCategoryBadge" style="color:var(--accent); font-weight:800; font-size:0.75rem; background:var(--ink); padding:3px 8px;">[ US Equities ]</span>
+                                <span class="badge badge-nyse" id="wlExchangeBadge">NYSE</span>
+                            </div>
+                            <h2 class="results-header-title" id="wlTitle">🇺🇸 All NYSE Stocks</h2>
+                            <p class="text-xs text-muted" id="wlSubtitle" style="margin-top:2px;">
+                                ~2,400 listed equities • Real-time quotes, technical levels & 1-click TradingView chart / backtest
+                            </p>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <button class="btn btn-scan btn-sm" id="wlScanBtn" onclick="scanCurrentWatchlist()" title="Execute Strategy Screener on this Exchange">
+                                🔍 Scan Exchange
+                            </button>
+                            <button class="btn btn-secondary btn-sm" id="wlBacktestBtn" onclick="backtestCurrentWatchlist()" title="Send to Backtest Simulator">
+                                🧪 Backtest
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="wlCopyTickersBtn" onclick="copyWatchlistTickers()" title="Copy comma-separated tickers">
+                                📋 Copy Tickers
+                            </button>
+                            <div class="dropdown-wrapper" style="position:relative; display:inline-block;">
+                                <button class="btn btn-ghost btn-sm" id="wlExportDropdownBtn" onclick="toggleWlExportMenu(event)" title="Export Options">
+                                    📥 Export ▼
+                                </button>
+                                <div class="dropdown-menu hidden" id="wlExportMenu" style="position:absolute; right:0; top:100%; z-index:100; min-width:180px; background:var(--surface); border:2px solid var(--ink); box-shadow:3px 3px 0 var(--ink); padding:6px;">
+                                    <button class="dropdown-item" onclick="exportWatchlistCSV()">📥 Download CSV</button>
+                                    <button class="dropdown-item" onclick="exportWatchlistTradingView()">📈 TradingView List (.txt)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Watchlist KPI Strip -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <span class="kpi-title">Exchange Total</span>
+                            <div class="kpi-value" id="wlKpiTotal">0</div>
+                            <span class="strategy-desc" id="wlKpiTotalDesc">Verified scrips</span>
+                        </div>
+                        <div class="kpi-card">
+                            <span class="kpi-title">Advance / Decline</span>
+                            <div class="kpi-value" id="wlKpiBreadth">--</div>
+                            <span class="strategy-desc" id="wlKpiBreadthDesc">Gainers / Losers</span>
+                        </div>
+                        <div class="kpi-card accent-card">
+                            <span class="kpi-title">Top Gainer Today</span>
+                            <div class="kpi-value text-success" id="wlKpiTopGainer">--</div>
+                            <span class="strategy-desc" id="wlKpiTopGainerDesc">Strongest momentum</span>
+                        </div>
+                        <div class="kpi-card">
+                            <span class="kpi-title">Top Loser Today</span>
+                            <div class="kpi-value text-danger" id="wlKpiTopLoser">--</div>
+                            <span class="strategy-desc" id="wlKpiTopLoserDesc">Sharpest pullback</span>
+                        </div>
+                    </div>
+
+                    <!-- Watchlist Filter & Search Strip -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin: 12px 0; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:240px;">
+                            <input type="text" class="form-input" id="wlSearchInput"
+                                   placeholder="🔍 Search ticker in this exchange..."
+                                   oninput="onWatchlistSearchInput(this.value)">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <!-- Breadth Filter Chips -->
+                            <div class="nav-view-switcher" style="border: 2px solid var(--ink); padding: 2px;">
+                                <button class="nav-tab filter-chip active" id="wlFilterAll" onclick="setWatchlistFilter('all')">All</button>
+                                <button class="nav-tab filter-chip buy" id="wlFilterGainers" onclick="setWatchlistFilter('gainers')">🟢 Gainers</button>
+                                <button class="nav-tab filter-chip sell" id="wlFilterLosers" onclick="setWatchlistFilter('losers')">🔴 Losers</button>
+                                <button class="nav-tab filter-chip" id="wlFilterStarred" onclick="setWatchlistFilter('starred')">⭐ Starred (<span id="starredCountLabel">0</span>)</button>
+                            </div>
+
+                            <!-- Sort Selector -->
+                            <select class="form-select form-select-sm" id="wlSortSelect" onchange="onWatchlistSortChange(this.value)" style="width:150px;">
+                                <option value="symbol_asc">Symbol (A-Z)</option>
+                                <option value="symbol_desc">Symbol (Z-A)</option>
+                                <option value="change_desc">Top Gainers %</option>
+                                <option value="change_asc">Top Losers %</option>
+                                <option value="price_desc">Price (High-Low)</option>
+                                <option value="price_asc">Price (Low-High)</option>
+                                <option value="volume_desc">Volume (High)</option>
+                            </select>
+
+                            <!-- Page Limit -->
+                            <select class="form-select form-select-sm" id="wlLimitSelect" onchange="onWatchlistLimitChange(this.value)" style="width:95px;">
+                                <option value="50">50 / page</option>
+                                <option value="100">100 / page</option>
+                                <option value="250">250 / page</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Watchlist Table -->
+                    <div class="results-table-wrapper">
+                        <table class="results-table" id="watchlistTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:36px; text-align:center;">⭐</th>
+                                    <th>Ticker</th>
+                                    <th>Exchange</th>
+                                    <th style="text-align:right;">Last Price</th>
+                                    <th style="text-align:right;">24h Change</th>
+                                    <th style="text-align:right;">% Change</th>
+                                    <th>Day High / Low</th>
+                                    <th style="text-align:right;">Volume</th>
+                                    <th style="text-align:center;">Quick Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="watchlistTableBody">
+                                <tr>
+                                    <td colspan="9" style="text-align:center; padding:30px;">
+                                        <div class="spinner" style="margin:0 auto 10px;"></div>
+                                        Loading exchange scrips...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Watchlist Pagination Bar -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:8px 0; border-top:1px solid var(--border);" id="wlPaginationBar">
+                        <div class="text-xs text-muted" id="wlPaginationInfo">
+                            Showing 0 of 0 stocks
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button class="btn btn-xs btn-ghost" id="wlPageFirst" onclick="changeWatchlistPage(1)">« First</button>
+                            <button class="btn btn-xs btn-ghost" id="wlPagePrev" onclick="changeWatchlistPage('prev')">‹ Prev</button>
+                            <span class="mono text-xs" id="wlCurrentPageLabel" style="padding:0 8px; font-weight:700;">Page 1 of 1</span>
+                            <button class="btn btn-xs btn-ghost" id="wlPageNext" onclick="changeWatchlistPage('next')">Next ›</button>
+                            <button class="btn btn-xs btn-ghost" id="wlPageLast" onclick="changeWatchlistPage('last')">Last »</button>
+                        </div>
                     </div>
                 </div>
 
@@ -488,51 +865,141 @@
     <!-- ================================================================ -->
     <!-- Strategy Editor Modal -->
     <!-- ================================================================ -->
+    <!-- ================================================================ -->
+    <!-- Strategy Creator Studio: AI Quant Chatbot & Code Editor Modal       -->
+    <!-- ================================================================ -->
     <div class="modal-overlay" id="editorModal">
-        <div class="modal" style="max-width:920px;">
-            <div class="modal-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="modal-title" id="editorModalTitle">Custom Strategy Editor</span>
-                    <span class="ai-badge">🤖 AI Assisted</span>
-                </div>
-                <button class="btn btn-ghost btn-icon" onclick="closeEditorModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <!-- AI Prompt Section -->
-                <div class="ai-prompt-section">
-                    <label class="form-label">✨ Describe your strategy in plain English</label>
-                    <div class="ai-prompt-wrapper">
-                        <textarea class="ai-prompt-input" id="aiPromptInput"
-                                  placeholder="Example: Buy when 20 EMA crosses above 50 EMA and RSI is above 50. Sell when 20 EMA crosses below 50 EMA."></textarea>
-                    </div>
-                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
-                        <button class="btn btn-secondary btn-sm" id="aiGenerateBtn" onclick="generateWithAI()">
-                            🤖 Generate Python Code
+        <div class="modal" style="max-width:960px; width:95%; max-height:92vh; display:flex; flex-direction:column;">
+            <div class="modal-header" style="flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <span class="modal-title" id="editorModalTitle">⚡ Quant Strategy Creator</span>
+                    <!-- Tabs switcher: Python Code Editor vs AI Quant Chatbot (Code editor first and default) -->
+                    <div class="modal-tab-group" style="display:flex; gap:3px; background:var(--bg); border:2px solid var(--ink); padding:2px;">
+                        <button class="modal-tab-btn active" id="modalTabCode" onclick="switchEditorTab('code')">
+                            📝 Python Code Editor
                         </button>
-                        <span class="text-xs text-muted">Powered by Gemini AI (or built-in offline rule engine)</span>
+                        <button class="modal-tab-btn" id="modalTabChat" onclick="switchEditorTab('chat')">
+                            💬 AI Quant Chatbot
+                        </button>
                     </div>
+                    <span class="ai-badge" style="background:var(--accent); color:#000;">
+                        ⚡ Palgoryx Quant AI • Vision &amp; Files
+                    </span>
                 </div>
-
-                <!-- Strategy ID -->
-                <div class="form-group">
-                    <label class="form-label">Strategy Identifier</label>
-                    <input type="text" class="form-input" id="editorStrategyId"
-                           placeholder="my_supertrend_strategy" style="font-family:var(--font-mono);">
-                </div>
-
-                <!-- Code Editor -->
-                <div class="form-group">
-                    <label class="form-label">Python Code (calculate_signals function)</label>
-                    <div class="code-editor-wrapper">
-                        <textarea class="code-editor" id="codeEditor"
-                                  spellcheck="false" autocomplete="off" autocorrect="off"
-                                  placeholder="# Write or paste your custom strategy Python code here..."></textarea>
-                    </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="btn btn-ghost btn-xs mono" id="btnClearChat" onclick="clearStrategyChat()" title="Start a fresh chat">
+                        🔄 Clear Chat
+                    </button>
+                    <button class="btn btn-ghost btn-icon" onclick="closeEditorModal()" title="Close">✕</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeEditorModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveStrategy()">💾 Save Strategy</button>
+
+            <div class="modal-body" style="padding:14px; overflow-y:auto; flex:1;">
+                
+                <!-- 1. Direct Python Code Editor Tab View (Default Active View) -->
+                <div id="editorCodeView">
+                    <!-- Quick AI Prompt within Code Tab -->
+                    <div class="ai-prompt-section">
+                        <label class="form-label">✨ Quick Natural Language Strategy Generator</label>
+                        <div class="ai-prompt-wrapper">
+                            <textarea class="ai-prompt-input" id="aiPromptInput"
+                                      placeholder="Example: Buy when 20 EMA crosses above 50 EMA and RSI is above 50. Sell when 20 EMA crosses below 50 EMA."></textarea>
+                        </div>
+                        <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <button class="btn btn-secondary btn-sm" id="aiGenerateBtn" onclick="generateWithAI()">
+                                ⚡ Generate Python Code
+                            </button>
+                            <button class="btn btn-ghost btn-sm" onclick="switchEditorTab('chat')">
+                                💬 Discuss with AI Quant Chatbot →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Strategy ID -->
+                    <div class="form-group">
+                        <label class="form-label">Strategy Identifier</label>
+                        <input type="text" class="form-input" id="editorStrategyId"
+                               placeholder="my_supertrend_strategy" style="font-family:var(--font-mono);">
+                    </div>
+
+                    <!-- Code Editor -->
+                    <div class="form-group">
+                        <label class="form-label">Python Code (calculate_signals or evaluate function)</label>
+                        <div class="code-editor-wrapper">
+                            <textarea class="code-editor" id="codeEditor"
+                                      spellcheck="false" autocomplete="off" autocorrect="off"
+                                      placeholder="# Write or paste your custom strategy Python code here..."></textarea>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+                        <button class="btn btn-secondary" onclick="closeEditorModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveStrategy()">💾 Save Strategy</button>
+                    </div>
+                </div>
+
+                <!-- 2. AI Quant Chatbot Tab View (Accessible via tab or switch button) -->
+                <div id="editorChatView" class="strategy-chat-container hidden">
+                    
+                    <!-- Pre-set System Instruction Indicator Banner -->
+                    <div class="chat-system-banner">
+                        <span style="font-size:1rem;">🧠</span>
+                        <div>
+                            <strong>Interactive Quant Architect Active:</strong> Deep strategy comprehension, multi-turn risk &amp; indicator clarification, and verified Python code generation on demand.
+                        </div>
+                    </div>
+
+                    <!-- Quick Strategy Idea Starters -->
+                    <div class="chat-suggestions-row">
+                        <span class="mono text-xs text-muted" style="align-self:center; font-weight:700;">Prompts:</span>
+                        <button class="chat-suggestion-chip" onclick="sendQuickPrompt('I want to discuss an EMA 20 and EMA 50 crossover setup with RSI filter. Ask me questions to clarify all rules.')">
+                            📈 Discuss EMA 20/50 + RSI Setup
+                        </button>
+                        <button class="chat-suggestion-chip" onclick="sendQuickPrompt('Help me design a Supertrend breakout system. Test my logic and clarify false-breakout filters.')">
+                            🛡️ Refine Supertrend System
+                        </button>
+                        <button class="chat-suggestion-chip" onclick="sendQuickPrompt('I have an idea for an intraday mean-reversion RSI scalper. Interrogate my setup to ensure zero execution flaws.')">
+                            ⚡ Socratic Review: RSI Scalper
+                        </button>
+                        <button class="chat-suggestion-chip" onclick="sendQuickPrompt('Please generate the verified Python strategy code based on our discussion.')">
+                            💻 Command: Generate Python Code
+                        </button>
+                    </div>
+
+                    <!-- Scrollable Conversation Thread -->
+                    <div class="chat-thread" id="strategyChatThread">
+                        <!-- Populated dynamically by app.js -->
+                    </div>
+
+                    <!-- Selected Attachments Tray (Images, Charts, PDFs, Files) -->
+                    <div class="chat-attachment-tray hidden" id="chatAttachmentTray"></div>
+
+                    <!-- Multi-modal Input Bar -->
+                    <div class="chat-input-bar">
+                        <!-- Hidden File Input for pictures and documents -->
+                        <input type="file" id="chatFileInput" accept="image/*,application/pdf,.csv,.txt,.py,.json" multiple style="display:none;" onchange="handleChatFilesSelected(event)">
+                        
+                        <button class="btn btn-secondary btn-sm" id="chatAttachBtn" onclick="document.getElementById('chatFileInput').click()" title="Attach Chart Screenshot, Drawing, PDF, or Data File">
+                            📎 Attach File / Picture
+                        </button>
+
+                        <textarea class="chat-input-textarea" id="chatInputText"
+                                  placeholder="Explain your trading idea in your own words, ask a question, or paste an image (Ctrl+V)..."
+                                  onkeydown="handleChatInputKeyDown(event)"></textarea>
+
+                        <div class="chat-input-actions">
+                            <button class="btn btn-primary btn-sm" id="chatSendBtn" onclick="sendStrategyChatMessage()">
+                                Send 🚀
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-muted" style="margin-top:2px; display:flex; justify-content:space-between; flex-wrap:wrap;">
+                        <span>Tip: Press <strong>Enter</strong> to send, <strong>Shift+Enter</strong> for newline. You can paste chart images directly (Ctrl+V).</span>
+                        <span class="mono">Palgoryx Quant Strategy Engine</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -653,12 +1120,12 @@
     <div class="modal-overlay" id="cloudModal">
         <div class="modal" style="max-width:560px;">
             <div class="modal-header">
-                <span class="modal-title">☁️ Free Cloud Storage & Sync</span>
+                <span class="modal-title">☁️ Palgory Cloud Storage & Sync</span>
                 <button class="btn btn-ghost btn-icon" onclick="closeCloudModal()">✕</button>
             </div>
             <div class="modal-body">
                 <p style="font-size:0.85rem; color:var(--text-tertiary); margin-top:0;">
-                    Your custom strategies, chart drawings, notes, and backtest results are securely saved and synced.
+                    Your custom strategies, chart drawings, notes, and backtest results are securely saved and synced across Palgory.
                 </p>
 
                 <div class="cloud-stats-grid">
@@ -709,7 +1176,7 @@
     <div class="modal-overlay" id="settingsModal">
         <div class="modal" style="max-width:560px;">
             <div class="modal-header">
-                <span class="modal-title">⚙️ Settings & Integrations</span>
+                <span class="modal-title">⚙️ Palgory System Settings & Integrations</span>
                 <button class="btn btn-ghost btn-icon" onclick="closeSettingsModal()">✕</button>
             </div>
             <div class="modal-body">

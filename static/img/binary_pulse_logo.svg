@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none">
+    <defs>
+        <!-- Deep Neon Glow for Cyber Circuitry -->
+        <filter id="pNeonBloom" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="2" result="blur1"/>
+            <feGaussianBlur stdDeviation="4.5" result="blur2"/>
+            <feMerge>
+                <feMergeNode in="blur2"/>
+                <feMergeNode in="blur1"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <filter id="pSoftGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.2" result="blur"/>
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <linearGradient id="pGreenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00D26A"/>
+            <stop offset="45%" stop-color="#00FF66"/>
+            <stop offset="100%" stop-color="#39FF14"/>
+        </linearGradient>
+        <linearGradient id="pCoreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#B3FFC8"/>
+            <stop offset="40%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#FFFFFF"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Dark Cyber Matrix Background -->
+    <rect width="100" height="100" rx="14" fill="#04070A"/>
+
+    <!-- Subtle Ambient Neon Aura in Background -->
+    <circle cx="50" cy="50" r="38" fill="#00FF66" opacity="0.06" filter="url(#pNeonBloom)"/>
+
+    <!-- ============================================================== -->
+    <!-- 1. LETTER 'P' CIRCUIT BOARD FRAME & PCB TRACES                -->
+    <!-- ============================================================== -->
+    <g filter="url(#pNeonBloom)">
+
+        <!-- Outer Boundary Contour of 'P' -->
+        <!-- Top bar, outer curve, down to mid-loop, and outer stem -->
+        <path d="M 27 22 L 61 22 C 73 22, 79 31, 79 43 C 79 53, 72 63, 56 68 L 47 68" 
+              stroke="#00FF66" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <!-- Left vertical stem spine of 'P' -->
+        <path d="M 27 22 L 27 78 L 36 78 L 36 68 L 41 68" 
+              stroke="#00FF66" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Top-left corner solder terminal -->
+        <circle cx="27" cy="22" r="2.2" fill="#00FF66"/>
+
+        <!-- ========================================================== -->
+        <!-- Upper 'P' Loop Circuit Traces (Horizontal & Vertical 90°) -->
+        <!-- ========================================================== -->
+        
+        <!-- Track 1: Upper horizontal circuit -->
+        <path d="M 31 26 L 46 26 L 46 32 L 50 32" 
+              stroke="#00FF66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="31" cy="26" r="1.6" fill="#00FF66"/>
+        <circle cx="50" cy="32" r="1.8" fill="#00FF66"/>
+
+        <!-- Track 2: Middle horizontal circuit -->
+        <path d="M 31 31 L 40 31 L 40 40 L 44 40" 
+              stroke="#00FF66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="31" cy="31" r="1.6" fill="#00FF66"/>
+        <circle cx="44" cy="40" r="1.7" fill="#FFFFFF"/>
+
+        <!-- Track 3: Left vertical branch node -->
+        <circle cx="31" cy="42" r="1.6" fill="#00FF66"/>
+
+        <!-- Track 4: Upper curved inner circuit track with white pad -->
+        <path d="M 53 30 C 56 31, 59 33, 60 34" 
+              stroke="#00FF66" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="53" cy="30" r="1.6" fill="#FFFFFF"/>
+        <circle cx="60" cy="34" r="1.8" fill="#FFFFFF"/>
+
+        <!-- Track 5: Concentric curved loop arc in upper bulb -->
+        <path d="M 50 25 C 62 25, 68 31, 68 41" 
+              stroke="#00FF66" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="8,3"/>
+
+        <!-- ========================================================== -->
+        <!-- Lower 'P' Loop Circuit Traces (Concentric Arcs & Nodes)   -->
+        <!-- ========================================================== -->
+        
+        <!-- Arc Track A: Outer concentric curve -->
+        <path d="M 74 46 C 74 54, 69 62, 57 65" 
+              stroke="#00FF66" stroke-width="1.9" stroke-linecap="round"/>
+        <circle cx="74" cy="46" r="1.7" fill="#FFFFFF"/>
+        <circle cx="57" cy="65" r="1.7" fill="#00FF66"/>
+
+        <!-- Arc Track B: Inner concentric curve with white and green pads -->
+        <path d="M 68 48 C 67 56, 62 61, 53 63" 
+              stroke="#00FF66" stroke-width="1.7" stroke-linecap="round"/>
+        <circle cx="68" cy="48" r="1.7" fill="#00FF66"/>
+        <circle cx="53" cy="63" r="1.7" fill="#FFFFFF"/>
+
+        <!-- Right peripheral circuit nodes -->
+        <circle cx="72" cy="39" r="1.7" fill="#00FF66"/>
+        <path d="M 62 55 L 57 58" stroke="#00FF66" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="62" cy="55" r="1.6" fill="#FFFFFF"/>
+
+        <!-- Lower stem circuit track -->
+        <path d="M 31 68 L 31 74 L 35 74" 
+              stroke="#00FF66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="31" cy="68" r="1.7" fill="#FFFFFF"/>
+        <circle cx="35" cy="74" r="1.5" fill="#00FF66"/>
+
+    </g>
+
+    <!-- ============================================================== -->
+    <!-- 2. CENTRAL BULLISH BREAKOUT ZIGZAG ARROW                       -->
+    <!-- ============================================================== -->
+    <!-- Outer Neon Green Breakout Shaft -->
+    <path d="M 21 70 L 42 41 L 50 58 L 74 27" 
+          stroke="url(#pGreenGrad)" stroke-width="5.8" 
+          stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"
+          filter="url(#pNeonBloom)"/>
+
+    <!-- Inner High-Contrast Brilliant White Core Zigzag Shaft -->
+    <path d="M 21 70 L 42 41 L 50 58 L 74 27" 
+          stroke="url(#pCoreGrad)" stroke-width="2.6" 
+          stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"
+          filter="url(#pSoftGlow)"/>
+
+    <!-- Sharp Bullish Breakout Arrowhead -->
+    <!-- Outer Neon Green Arrowhead -->
+    <polygon points="83,16 66,24 72,30 67,31 74,38 78,33 83,16" 
+             fill="url(#pGreenGrad)" filter="url(#pNeonBloom)"/>
+    
+    <!-- True Precision Arrowhead Polygon matching the reference design -->
+    <path d="M 83 16 L 66 24 L 71 29 L 77 35 Z" 
+          fill="url(#pGreenGrad)" filter="url(#pNeonBloom)"/>
+
+    <!-- Arrowhead Inner Core White Fill & Apex Highlight -->
+    <polygon points="82,17 70,23 72,27 75,30" 
+             fill="#FFFFFF" filter="url(#pSoftGlow)"/>
+
+</svg>

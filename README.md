@@ -1,16 +1,17 @@
 <div align="center">
 
-# 📈 StrategyScreener & Backtester
-### Real-Time Indian Stock Market (NSE & BSE) Multi-Strategy Screener, Backtesting Engine & TradingView Studio
+# ⚡ Palgoryx (Palgory)
+### Quantitative Strategy Screener, Backtesting Engine & Binary Pulse Active Trading Terminal
+#### Indian Stock Market (NSE & BSE) Algorithmic Research Platform
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-tradingstratergyscreanner.ai.studio-00C853.svg?style=for-the-badge)](https://tradingstratergyscreanner.ai.studio)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-palgoryx.ai.studio-00C853.svg?style=for-the-badge)](https://palgoryx.ai.studio/)
 [![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Express](https://img.shields.io/badge/Express-4.21+-000000.svg?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
 [![TradingView](https://img.shields.io/badge/TradingView-Active_Charting_Suite-131722.svg?style=for-the-badge&logo=tradingview&logoColor=white)](https://www.tradingview.com)
 [![Yahoo Finance](https://img.shields.io/badge/Data-Yahoo_Finance_API-6001D2.svg?style=for-the-badge&logo=yahoo&logoColor=white)](https://finance.yahoo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f59b.svg?style=for-the-badge)](LICENSE)
 
-🌐 **[Open Live Website →](https://tradingstratergyscreanner.ai.studio)**
+🌐 **[Open Live Website →](https://palgoryx.ai.studio/)**
 
 [**Explore Features**](#-key-features) • [**Live Architecture**](#-architecture--tech-stack) • [**Quickstart Guide**](#-quickstart-guide) • [**Strategy API Spec**](#-writing-custom-strategies)
 
@@ -20,7 +21,7 @@
 
 ## 🌟 Overview
 
-**StrategyScreener & Backtester** is an open-source, full-stack quantitative trading platform built specifically for Indian Equities (**NSE & BSE**). It scans hundreds of benchmark and mid/small-cap equities simultaneously across user-defined Python trading algorithms, enforces **strict multi-strategy signal confluence**, and simulates portfolio performance with an interactive backtesting engine and the official **TradingView Advanced Real-Time Charting Suite**.
+**Palgoryx** (also referred to as **Palgory**) is an open-source, full-stack quantitative trading intelligence platform built specifically for Indian Equities (**NSE & BSE**) powered by the **Binary Pulse** quantitative engine. It scans hundreds of benchmark and mid/small-cap equities simultaneously across user-defined Python trading algorithms, enforces **strict multi-strategy signal confluence**, and simulates portfolio performance with an interactive backtesting engine and the official **TradingView Advanced Real-Time Charting Suite**.
 
 Whether you trade moving average crossovers, Supertrend breakouts, momentum sweeps, or complex multi-indicator price action models, this platform bridges the gap between Python algorithmic logic and an intuitive, responsive web UI.
 
@@ -61,7 +62,7 @@ Whether you trade moving average crossovers, Supertrend breakouts, momentum swee
 
 ### 🤖 5. AI Strategy Generator & In-Browser Code Editor
 - **Natural Language to Python**: Describe your trading rule in plain English (e.g., *"Buy when 20 EMA crosses above 50 EMA and RSI is above 55. Sell when price closes below 20 EMA"*).
-- **Dual AI Engine**: Uses **Google Gemini 2.5/3.0 API** when a key is provided, with an intelligent **offline rule-based AST generator** as an instant zero-configuration fallback.
+- **Dual AI Engine**: Uses the **Palgoryx Proprietary Quantitative AI Engine** with an intelligent **offline rule-based AST generator** as an instant zero-configuration fallback.
 - **Dynamic Hot-Reloading**: Create, edit, and upload `.py` files without ever restarting the backend server.
 
 ### 🔐 6. Secure Authentication & Email OTP System
@@ -89,7 +90,7 @@ graph TD
     DataProvider[Data Provider<br>Yahoo Finance Fetcher + Parquet Cache]
     DB[(SQLite Persistent Store<br>screener.db)]
     EmailSvc[Email & OTP Service<br>SMTP + Dev Simulation]
-    AIEngine[AI Generator<br>Gemini API + Offline Parser]
+    AIEngine[AI Generator<br>Palgoryx AI Engine + Offline Parser]
 
     Client -->|User Controls & Scans| FastAPI
     Client -->|Drawings & Indicators| TVWidget
@@ -112,7 +113,7 @@ graph TD
 | **Database** | SQLite3 (WAL Mode) | Persistent user accounts, strategies, drawings, backtests |
 | **Frontend** | Vanilla ES6+ JavaScript, Modern CSS | Zero-dependency, ultra-fast dual-theme (Dark/Light) UI |
 | **Charts** | TradingView Advanced Widget + Lightweight Charts v4 | Professional technical analysis & custom markers |
-| **AI / NLP** | Google Gemini API + Custom Regex Parser | Natural language strategy code synthesis |
+| **AI / NLP** | Palgoryx Proprietary Quantitative AI Engine | Natural language strategy code synthesis |
 
 ---
 
@@ -194,7 +195,7 @@ def calculate_signals(df: pd.DataFrame) -> pd.Series:
 
 This platform is live and publicly accessible at:
 
-### 🌐 [https://tradingstratergyscreanner.ai.studio](https://tradingstratergyscreanner.ai.studio)
+### 🌐 [https://palgoryx.ai.studio/](https://palgoryx.ai.studio/)
 
 Published with instant updates and automatic HTTPS.
 

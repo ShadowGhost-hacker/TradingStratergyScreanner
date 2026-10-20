@@ -1,6 +1,6 @@
 {
   "name": "Trading Strategy Screener & Backtester",
-  "description": "Scan Indian Stock Market (NSE & BSE) across multiple trading strategies. Active TradingView charts, AI Strategy Generator, Backtest Simulator, and Free Cloud Storage.",
+  "description": "Global & Indian Quantitative Trading Screener & Backtester for NYSE, NASDAQ, SSE, SZSE, BSE, HKSE, TSE, LSE, TSX, FSE, ASX, NSE & Commodities. Interactive TradingView charts, AI Strategy Generator, and Free Cloud Storage.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
