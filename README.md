@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ Palgoryx (Palgory)
+# ⚡ Palgoryx 
 ### Quantitative Strategy Screener, Backtesting Engine & Binary Pulse Active Trading Terminal
 #### Indian Stock Market (NSE & BSE) Algorithmic Research Platform
 
